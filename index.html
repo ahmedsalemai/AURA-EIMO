@@ -1,0 +1,2187 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AURA-EIMO | منصة مراقبة صحة رواد الفضاء ومحاكاة السيناريوهات الثلاثة — Digital Minds</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Changa:wght@500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            dmNavy: '#081B3A',
+            dmNavyDeep: '#051126',
+            dmNavyCard: '#0D254C',
+            dmCyan: '#12B8F2',
+            dmViolet: '#7C3AED',
+            dmIce: '#F7FBFF',
+            dmSlate: '#AFC3DE'
+          },
+          fontFamily: {
+            sans: ['IBM Plex Sans Arabic', 'Noto Sans Arabic', 'Inter', 'sans-serif'],
+            display: ['Changa', 'Noto Sans Arabic', 'sans-serif'],
+            mono: ['JetBrains Mono', 'IBM Plex Sans Arabic', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      background-color: #051126;
+      color: #F7FBFF;
+      font-family: 'IBM Plex Sans Arabic', 'Noto Sans Arabic', 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+    h1, h2, h3, .font-heading {
+      font-family: 'Changa', 'Noto Sans Arabic', 'Inter', sans-serif;
+    }
+    .ltr-num {
+      direction: ltr;
+      unicode-bidi: embed;
+      display: inline-block;
+    }
+    .glass-card {
+      background: linear-gradient(145deg, rgba(13, 37, 76, 0.88), rgba(8, 27, 58, 0.94));
+      border: 1px solid rgba(18, 184, 242, 0.2);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.55);
+    }
+    .glass-card-active {
+      border-color: #12B8F2;
+      box-shadow: 0 0 22px rgba(18, 184, 242, 0.25);
+    }
+    .organ-node {
+      cursor: pointer;
+      transition: all 0.22s ease;
+    }
+    .organ-node:hover {
+      filter: drop-shadow(0 0 10px rgba(18, 184, 242, 0.85));
+      transform: scale(1.04);
+      transform-origin: center;
+    }
+    .organ-selected {
+      stroke: #12B8F2 !important;
+      stroke-width: 3px !important;
+      filter: drop-shadow(0 0 12px rgba(18, 184, 242, 0.9));
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.9; }
+      50% { transform: scale(1.12); opacity: 0.4; }
+      100% { transform: scale(0.95); opacity: 0.9; }
+    }
+    .pulse-indicator {
+      animation: pulse-ring 2s infinite ease-in-out;
+      transform-origin: center;
+    }
+    input[type="range"] {
+      accent-color: #12B8F2;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #051126;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1B3B6F;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #12B8F2;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-dmCyan selection:text-dmNavy">
+
+  <!-- TOP TELEMETRY & BRAND HEADER -->
+  <header class="sticky top-0 z-30 bg-dmNavyDeep/95 backdrop-blur-md border-b border-dmCyan/25 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand Identity -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-dmCyan via-dmViolet to-dmNavy flex items-center justify-center border border-dmCyan/40 shadow-lg">
+          <svg class="w-6 h-6 text-dmIce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold tracking-tight text-lg text-dmIce font-heading">AURA-EIMO</span>
+            <span class="text-[11px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full bg-dmCyan/15 text-dmCyan border border-dmCyan/30">NASA Space Apps 2026</span>
+          </div>
+          <p id="brandSubtitle" class="text-xs text-dmSlate">
+            <strong class="text-dmIce">Digital Minds</strong> <span class="text-dmCyan font-mono">THINK • BUILD • IMPACT</span> — منصة المراقبة الصحية الذاتية وفرز الطوارئ لرواد الفضاء
+          </p>
+        </div>
+      </div>
+
+      <!-- Live Mission Environment & Comms Telemetry Strip -->
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div class="px-3 py-1.5 rounded-lg bg-dmNavyCard border border-dmCyan/20 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-dmCyan animate-ping"></span>
+          <div class="text-xs">
+            <span id="lblEnvRegime" class="text-dmSlate block text-[10px] uppercase font-mono">بيئة المهمة والجاذبية</span>
+            <span id="headerEnvBadge" class="font-semibold text-dmIce">مركبة الفضاء العميق (0G)</span>
+          </div>
+        </div>
+
+        <div class="px-3 py-1.5 rounded-lg bg-dmNavyCard border border-dmCyan/20 flex items-center gap-2">
+          <div class="text-xs">
+            <span id="lblLatency" class="text-dmSlate block text-[10px] uppercase font-mono">تأخر الاتصال بالأرض (اتجاه واحد)</span>
+            <span id="headerLatencyBadge" class="font-mono font-bold text-amber-400">14 د 20 ث (تشغيل ذاتي EIMO)</span>
+          </div>
+        </div>
+
+        <div id="overallStatusPill" class="px-3.5 py-1.5 rounded-lg font-mono text-xs font-bold uppercase tracking-wider border flex items-center gap-2 bg-red-500/20 text-red-300 border-red-500/50">
+          <span id="overallStatusDot" class="w-2.5 h-2.5 rounded-full bg-red-400"></span>
+          <span id="overallStatusText">إنذار حرج — تدخل فوري مطلوب</span>
+        </div>
+
+        <button id="voiceCoachBtn" type="button" class="px-3 py-1.5 rounded-lg bg-dmViolet/25 hover:bg-dmViolet/40 border border-dmViolet/50 text-xs font-semibold text-dmIce flex items-center gap-1.5 transition">
+          <svg class="w-4 h-4 text-dmCyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+          </svg>
+          <span id="voiceCoachLabel">قراءة الإرشادات صوتياً</span>
+        </button>
+
+        <button id="langToggleBtn" type="button" class="px-3 py-1.5 rounded-lg bg-dmCyan/20 hover:bg-dmCyan/30 border border-dmCyan/50 text-xs font-bold font-mono text-dmCyan transition">
+          EN / عربي
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-5 space-y-5">
+
+    <!-- 3-SCENARIO SIMULATOR BAR -->
+    <section aria-label="Mission Scenario Simulator" class="glass-card rounded-2xl p-4">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-3">
+        <div>
+          <h1 id="sec1Heading" class="text-sm sm:text-base font-bold text-dmIce flex items-center gap-2">
+            <span class="text-dmCyan font-mono">01 //</span> محاكي السيناريوهات الثلاثة التفاعلي (متوافق مع متطلبات التحدي الرسمية)
+          </h1>
+          <p id="sec1Sub" class="text-xs text-dmSlate">
+            بدّل بين سيناريوهات الفضاء الثلاثة لإعادة معايرة المؤشرات الحيوية (<code class="text-dmCyan">0G مركبة المريخ</code>، <code class="text-dmCyan">0G محطة مدارية</code>، <code class="text-dmCyan">1/6G قاعدة القمر</code>) وبيانات القميص الذكي وإرشادات الطوارئ لغير الأطباء.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="lblCrewSelect" class="text-xs text-dmSlate font-mono">رائد الفضاء:</span>
+          <select id="crewSelect" class="bg-dmNavyDeep border border-dmCyan/30 rounded-lg px-2.5 py-1.5 text-xs text-dmIce font-medium focus:outline-none focus:border-dmCyan">
+            <option value="C001">القائد أحمد سالم (ID: C001 — Bio-Monitor نشط)</option>
+            <option value="C002">مهندس الطيران مصطفى عاشور (ID: C002 — Bio-Monitor نشط)</option>
+            <option value="C003">أخصائي المهمة محمد صبحي (ID: C003 — Bio-Monitor نشط)</option>
+            <option value="C004">أخصائي الحمولة ر. ليوناردي (ID: C004 — Bio-Monitor نشط)</option>
+          </select>
+          <button id="resetScenarioBtn" type="button" class="px-2.5 py-1.5 rounded-lg bg-dmNavyDeep hover:bg-dmCyan/20 border border-dmCyan/30 text-xs text-dmCyan font-mono transition">
+            إعادة ضبط السيناريو
+          </button>
+        </div>
+      </div>
+
+      <!-- 3 Scenario Buttons -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3" id="scenarioButtonsContainer">
+        <!-- Scenario 1 -->
+        <button type="button" data-scenario="mars_collapse" class="scenario-btn text-right p-3.5 rounded-xl border transition-all bg-dmNavyDeep/90 border-dmCyan shadow-md">
+          <div class="flex items-center justify-between mb-1">
+            <span id="sc1Badge" class="text-[11px] font-mono uppercase px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/40 font-bold">السيناريو 1 • مركبة الفضاء العميق 0G</span>
+            <span id="sc1Delay" class="text-xs font-mono text-dmSlate">التأخير: 14 د 20 ث</span>
+          </div>
+          <div id="sc1Title" class="font-bold text-sm text-dmIce mb-1 font-heading">رحلة المريخ (0G): انهيار مفاجئ وألم حاد بالصدر</div>
+          <p id="sc1Desc" class="text-xs text-dmSlate line-clamp-2">
+            يحاكي أزمة فيديو التحدي الرسمي: في منتصف الطريق إلى المريخ أثناء عاصفة إشعاعية شمسية (1.85 mSv/day)، يصاب زميلك بألم حاد في الصدر مع هبوط ضغط الدم (92/58 mmHg) وتسارع النبض (134 bpm).
+          </p>
+        </button>
+
+        <!-- Scenario 2 -->
+        <button type="button" data-scenario="station_sans_co2" class="scenario-btn text-right p-3.5 rounded-xl border transition-all bg-dmNavyDeep/60 border-dmCyan/20 hover:border-dmCyan/60">
+          <div class="flex items-center justify-between mb-1">
+            <span id="sc2Badge" class="text-[11px] font-mono uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">السيناريو 2 • محطة فضائية مدارية 0G</span>
+            <span id="sc2Delay" class="text-xs font-mono text-dmSlate">التأخير: 1.2 ث</span>
+          </div>
+          <div id="sc2Title" class="font-bold text-sm text-dmIce mb-1 font-heading">المحطة المدارية: ارتفاع CO2 ومتلازمة العين العصبية SANS</div>
+          <p id="sc2Desc" class="text-xs text-dmSlate line-clamp-2">
+            يحاكي تشبع فلاتر الهواء وارتفاع ضغط ثاني أكسيد الكربون الجزئي ppCO2 إلى 4.2 mmHg (تجاوز حد NASA-STD-3001 البالغ 3.0 mmHg) مع اندفاع السوائل للرأس وارتفاع ضغط العين (23 mmHg).
+          </p>
+        </button>
+
+        <!-- Scenario 3 -->
+        <button type="button" data-scenario="lunar_eva_dust" class="scenario-btn text-right p-3.5 rounded-xl border transition-all bg-dmNavyDeep/60 border-dmCyan/20 hover:border-dmCyan/60">
+          <div class="flex items-center justify-between mb-1">
+            <span id="sc3Badge" class="text-[11px] font-mono uppercase px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold">السيناريو 3 • قاعدة سطح القمر 1/6G</span>
+            <span id="sc3Delay" class="text-xs font-mono text-dmSlate">التأخير: 2.6 ث</span>
+          </div>
+          <div id="sc3Title" class="font-bold text-sm text-dmIce mb-1 font-heading">قاعدة القمر والعربة الجوالة: استنشاق غبار الريجوليث وهبوط السكر</div>
+          <p id="sc3Desc" class="text-xs text-dmSlate line-clamp-2">
+            يحاكي العودة من نشاط خارج المركبة EVA في جاذبية القمر 1/6G مع تهيج الشعب الهوائية بغبار القمر السيليكاتي (SpO2 93%) وهبوط سكر الدم الإجهادي (64 mg/dL) وفحص فقاعات تخفيف الضغط.
+          </p>
+        </button>
+      </div>
+    </section>
+
+    <!-- NAVIGATION TABS FOR DEEP WORKFLOWS -->
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-dmCyan/20 pb-2">
+      <div class="flex flex-wrap gap-2" role="tablist">
+        <button type="button" data-view="dashboard" id="tabBtnDashboard" class="view-tab px-3.5 py-2 rounded-xl text-xs font-bold transition bg-dmCyan text-dmNavy">
+          1. لوحة المؤشرات الحيوية وخريطة الجسم التفاعلية
+        </button>
+        <button type="button" data-view="emergency" id="tabBtnEmergency" class="view-tab px-3.5 py-2 rounded-xl text-xs font-bold transition bg-dmNavyCard text-dmSlate hover:text-dmIce border border-dmCyan/20">
+          2. طوارئ "سقوط زميل المهمة" وحاسبة الدواء الفضائية PK/PD
+        </button>
+        <button type="button" data-view="routine" id="tabBtnRoutine" class="view-tab px-3.5 py-2 rounded-xl text-xs font-bold transition bg-dmNavyCard text-dmSlate hover:text-dmIce border border-dmCyan/20">
+          3. الروتين اليومي التفاعلي (Gamification) وإدخال القياسات
+        </button>
+        <button type="button" data-view="resources" id="tabBtnResources" class="view-tab px-3.5 py-2 rounded-xl text-xs font-bold transition bg-dmNavyCard text-dmSlate hover:text-dmIce border border-dmCyan/20">
+          4. مستكشف مصادر وبيانات NASA ووكالات الفضاء الرسمية
+        </button>
+      </div>
+      <div class="text-xs font-mono text-dmSlate">
+        <span id="lblActiveOrganPrefix">النظام التشريحي المحدد:</span> <span id="activeOrganLabel" class="text-dmCyan font-bold">القلب والأوعية الدموية (الصدر)</span>
+      </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 1: LIVE BIOMETRIC, CLICKABLE BODY MAP & NON-DOCTOR COACH         -->
+    <!-- ===================================================================== -->
+    <section id="view-dashboard" class="space-y-5">
+
+      <!-- 8 KEY HEALTH INDICATOR CARDS (COLOR-CODED AT A GLANCE) -->
+      <div id="kpiGrid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
+        <!-- Populated dynamically via renderKPICards() -->
+      </div>
+
+      <!-- 3-COLUMN CORE CONSOLE: CLICKABLE HUMAN FIGURE + NON-DOCTOR COACH + DYNAMIC CHARTS -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+        <!-- LEFT COLUMN (4 COLS): INTERACTIVE CLICKABLE ASTRONAUT BODY MAP -->
+        <div class="lg:col-span-4 glass-card rounded-2xl p-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <h2 id="bodyMapHeading" class="text-sm font-bold text-dmIce">خريطة الجسم التشريحية التفاعلية</h2>
+              <span id="bodyMapHint" class="text-[11px] font-mono text-dmCyan">اضغط على أي عضو للفحص</span>
+            </div>
+            <p id="bodyMapDesc" class="text-xs text-dmSlate mb-3">
+              مطابق لوصف التحدي الرسمي: اضغط على أي جزء من جسم رائد الفضاء لعرض وظيفته الفسيولوجية في الفضاء، وحالته الصحية، وطريقة القياس خطوة بخطوة.
+            </p>
+          </div>
+
+          <!-- Interactive SVG Human Figure -->
+          <div class="relative flex items-center justify-center bg-dmNavyDeep/80 rounded-xl border border-dmCyan/15 p-3 my-1">
+            <svg id="astronautBodySvg" viewBox="0 0 260 420" class="w-full max-w-[240px] h-auto select-none" aria-label="Interactive Astronaut Body Map">
+              <defs>
+                <radialGradient id="bodyGlow" cx="50%" cy="45%" r="55%">
+                  <stop offset="0%" stop-color="#12B8F2" stop-opacity="0.18"/>
+                  <stop offset="100%" stop-color="#051126" stop-opacity="0"/>
+                </radialGradient>
+              </defs>
+              <circle cx="130" cy="200" r="120" fill="url(#bodyGlow)" />
+
+              <!-- Base Astronaut Silhouette Outline -->
+              <g stroke="#29528A" stroke-width="1.5" fill="#0A1E3F" opacity="0.85">
+                <circle cx="130" cy="48" r="28" />
+                <rect x="120" y="76" width="20" height="14" rx="4" />
+                <path d="M85,90 L175,90 L185,165 L168,240 L92,240 L75,165 Z" />
+                <path d="M85,92 L54,155 L46,220 L64,224 L74,165 L88,120 Z" />
+                <path d="M175,92 L206,155 L214,220 L196,224 L186,165 L172,120 Z" />
+                <path d="M94,240 L86,335 L82,395 L112,395 L118,335 L126,240 Z" />
+                <path d="M166,240 L174,335 L178,395 L148,395 L142,335 L134,240 Z" />
+              </g>
+
+              <!-- Bio-Monitor Smart Shirt Telemetry Grid Lines -->
+              <path d="M90,115 H170 M88,145 H172 M92,175 H168 M130,90 V235" stroke="#12B8F2" stroke-width="0.7" stroke-dasharray="3 3" opacity="0.45"/>
+
+              <!-- CLICKABLE ORGAN 1: Neuro-Ocular & Intracranial (SANS) -->
+              <g id="organ-neuro" data-organ="neuro" class="organ-node">
+                <circle cx="130" cy="42" r="18" fill="#12B8F2" fill-opacity="0.22" stroke="#12B8F2" stroke-width="2"/>
+                <circle id="dot-neuro" cx="130" cy="42" r="6" fill="#10B981"/>
+                <text id="svgLblNeuro" x="130" y="18" text-anchor="middle" fill="#F7FBFF" font-size="9.5" font-family="Changa" font-weight="700">العين والدماغ SANS</text>
+              </g>
+
+              <!-- CLICKABLE ORGAN 2: Behavioral / Circadian & Cognitive -->
+              <g id="organ-behavioral" data-organ="behavioral" class="organ-node">
+                <rect x="100" y="56" width="60" height="16" rx="8" fill="#7C3AED" fill-opacity="0.28" stroke="#7C3AED" stroke-width="1.8"/>
+                <circle id="dot-behavioral" cx="112" cy="64" r="4.5" fill="#F59E0B"/>
+                <text id="svgLblBehavioral" x="135" y="67" text-anchor="middle" fill="#F7FBFF" font-size="8" font-family="Changa">النوم والمزاج</text>
+              </g>
+
+              <!-- CLICKABLE ORGAN 3: Pulmonary & Airway (Lungs) -->
+              <g id="organ-pulmonary" data-organ="pulmonary" class="organ-node">
+                <path d="M96,102 C96,95 118,95 122,108 L122,148 C112,152 94,148 94,132 Z" fill="#12B8F2" fill-opacity="0.22" stroke="#12B8F2" stroke-width="1.8"/>
+                <path d="M164,102 C164,95 142,95 138,108 L138,148 C148,152 166,148 166,132 Z" fill="#12B8F2" fill-opacity="0.22" stroke="#12B8F2" stroke-width="1.8"/>
+                <circle id="dot-pulmonary" cx="108" cy="122" r="5" fill="#F59E0B"/>
+                <text id="svgLblLungs" x="48" y="124" text-anchor="middle" fill="#AFC3DE" font-size="9" font-family="Changa">الرئتان / CO2</text>
+              </g>
+
+              <!-- CLICKABLE ORGAN 4: Cardiovascular / Heart (Bio-Monitor ECG) -->
+              <g id="organ-cardio" data-organ="cardio" class="organ-node organ-selected">
+                <circle cx="138" cy="128" r="16" fill="#EF4444" fill-opacity="0.3" stroke="#EF4444" stroke-width="2.2"/>
+                <circle id="dot-cardio" cx="138" cy="128" r="6.5" fill="#EF4444" class="pulse-indicator"/>
+                <text id="svgLblHeart" x="210" y="130" text-anchor="middle" fill="#F7FBFF" font-size="9.5" font-family="Changa" font-weight="700">القلب / ECG</text>
+              </g>
+
+              <!-- CLICKABLE ORGAN 5: Metabolic, Hepatic & Hematological -->
+              <g id="organ-metabolic" data-organ="metabolic" class="organ-node">
+                <rect x="96" y="162" width="68" height="36" rx="10" fill="#10B981" fill-opacity="0.2" stroke="#10B981" stroke-width="1.8"/>
+                <circle id="dot-metabolic" cx="130" cy="176" r="5.5" fill="#F59E0B"/>
+                <text id="svgLblMetabolic" x="130" y="193" text-anchor="middle" fill="#F7FBFF" font-size="8.5" font-family="Changa">الأيض وسكر الدم</text>
+              </g>
+
+              <!-- CLICKABLE ORGAN 6: Musculoskeletal & Bone Density -->
+              <g id="organ-musculoskeletal" data-organ="musculoskeletal" class="organ-node">
+                <rect x="92" y="252" width="24" height="95" rx="8" fill="#12B8F2" fill-opacity="0.18" stroke="#12B8F2" stroke-width="1.8"/>
+                <rect x="144" y="252" width="24" height="95" rx="8" fill="#12B8F2" fill-opacity="0.18" stroke="#12B8F2" stroke-width="1.8"/>
+                <circle id="dot-musculoskeletal" cx="104" cy="298" r="5.5" fill="#10B981"/>
+                <text id="svgLblBone" x="130" y="366" text-anchor="middle" fill="#F7FBFF" font-size="9.5" font-family="Changa">العظام والعضلات</text>
+              </g>
+            </svg>
+          </div>
+
+          <!-- Organ Quick Selector Pills -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mt-2">
+            <button type="button" data-organ-btn="cardio" id="pillCardio" class="organ-pill px-2 py-1.5 rounded-lg text-[11px] font-bold border border-dmCyan bg-dmCyan/20 text-dmIce truncate">القلب والأوعية</button>
+            <button type="button" data-organ-btn="neuro" id="pillNeuro" class="organ-pill px-2 py-1.5 rounded-lg text-[11px] font-bold border border-dmCyan/25 bg-dmNavyDeep text-dmSlate truncate">العين والدماغ SANS</button>
+            <button type="button" data-organ-btn="pulmonary" id="pillPulmonary" class="organ-pill px-2 py-1.5 rounded-lg text-[11px] font-bold border border-dmCyan/25 bg-dmNavyDeep text-dmSlate truncate">الرئتان و CO2</button>
+            <button type="button" data-organ-btn="metabolic" id="pillMetabolic" class="organ-pill px-2 py-1.5 rounded-lg text-[11px] font-bold border border-dmCyan/25 bg-dmNavyDeep text-dmSlate truncate">الدم وسكر الجلوكوز</button>
+            <button type="button" data-organ-btn="musculoskeletal" id="pillMusculo" class="organ-pill px-2 py-1.5 rounded-lg text-[11px] font-bold border border-dmCyan/25 bg-dmNavyDeep text-dmSlate truncate">العظام والعضلات</button>
+            <button type="button" data-organ-btn="behavioral" id="pillBehavioral" class="organ-pill px-2 py-1.5 rounded-lg text-[11px] font-bold border border-dmCyan/25 bg-dmNavyDeep text-dmSlate truncate">النوم والحالة النفسية</button>
+          </div>
+        </div>
+
+        <!-- CENTER COLUMN (4 COLS): "ASTRONAUTS ARE NOT DOCTORS" 3-PILLAR CLINICAL COACH -->
+        <div class="lg:col-span-4 glass-card rounded-2xl p-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <span id="coachBadgeTop" class="text-[11px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded bg-dmViolet/25 text-dmCyan border border-dmViolet/50">
+                المرشد الطبي لغير الأطباء (Non-MD Coach)
+              </span>
+              <span id="coachSeverityBadge" class="text-xs font-mono font-bold px-2.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/40">
+                حرج — CRITICAL
+              </span>
+            </div>
+
+            <h2 id="coachOrganTitle" class="text-base font-extrabold text-dmIce mb-1">
+              الجهاز القلبي الوعائي والدورة الدموية
+            </h2>
+            <p id="coachOrganSummary" class="text-xs text-dmSlate mb-3">
+              مراقبة مستمرة لتخطيط القلب ثلاثي الأقطاب ECG وضغط الدم عبر القميص الذكي CSA Bio-Monitor مع الموجات فوق الصوتية المحمولة للصدر.
+            </p>
+
+            <!-- 3 Mandatory Challenge Questions Cards -->
+            <div class="space-y-3">
+              <!-- Card 1: HOW TO TAKE THE MEASUREMENT -->
+              <div class="p-3 rounded-xl bg-dmNavyDeep/90 border-r-4 border-l-0 border-dmCyan">
+                <div class="flex items-center justify-between mb-1 gap-2">
+                  <h3 id="coachStep1Label" class="text-xs font-bold text-dmCyan">
+                    1. كيف تجري هذا القياس بنفسك؟ (إرشادات مبسطة لغير الأطباء)
+                  </h3>
+                  <span id="coachHardwareTag" class="text-[10px] font-mono text-dmSlate bg-dmNavyCard px-2 py-0.5 rounded shrink-0">CSA Bio-Monitor + POCUS</span>
+                </div>
+                <p id="coachHowToMeasure" class="text-xs text-dmIce leading-relaxed"></p>
+              </div>
+
+              <!-- Card 2: WHY IT MATTERS IN SPACEFLIGHT -->
+              <div class="p-3 rounded-xl bg-dmNavyDeep/90 border-r-4 border-l-0 border-dmViolet">
+                <div class="flex items-center justify-between mb-1 gap-2">
+                  <h3 id="coachStep2Label" class="text-xs font-bold text-purple-300">
+                    2. لماذا يُعد الفحص ضرورياً؟ وعلاقته بمخاطر الفضاء الخمسة
+                  </h3>
+                  <span id="coachHazardTag" class="text-[10px] font-mono text-dmSlate bg-dmNavyCard px-2 py-0.5 rounded shrink-0">الإشعاع + انعدام الجاذبية</span>
+                </div>
+                <p id="coachWhyItMatters" class="text-xs text-dmIce leading-relaxed"></p>
+              </div>
+
+              <!-- Card 3: WHAT TO DO WHEN ABNORMAL & FLIGHT SURGEON ESCALATION -->
+              <div class="p-3 rounded-xl bg-dmNavyDeep/90 border-r-4 border-l-0 border-amber-400">
+                <div class="flex items-center justify-between mb-1 gap-2">
+                  <h3 id="coachStep3Label" class="text-xs font-bold text-amber-300">
+                    3. ما الإجراء الفوري عند الخروج عن المعدل؟ ومتى نُبلغ طبيب الرحلة؟
+                  </h3>
+                  <span id="coachStandardTag" class="text-[10px] font-mono text-dmSlate bg-dmNavyCard px-2 py-0.5 rounded shrink-0">NASA-STD-3001 V1</span>
+                </div>
+                <p id="coachWhatToDo" class="text-xs text-dmIce leading-relaxed mb-2"></p>
+                <div id="coachFlightSurgeonTrigger" class="text-[11px] font-mono text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-lg px-2.5 py-1.5"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Action Footer -->
+          <div class="mt-4 pt-3 border-t border-dmCyan/15 flex flex-wrap items-center justify-between gap-2">
+            <button id="openEmergencyFromCoachBtn" type="button" class="px-3 py-2 rounded-xl bg-red-500/25 hover:bg-red-500/40 border border-red-400/50 text-xs font-bold text-red-200 transition">
+              فتح بروتوكول طوارئ "سقوط زميل المهمة"
+            </button>
+            <button id="logInspectionBtn" type="button" class="px-3 py-2 rounded-xl bg-dmCyan hover:bg-dmCyan/90 text-xs font-bold text-dmNavy transition">
+              تأكيد إتمام فحص العضو (+25 XP)
+            </button>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN (4 COLS): LONGITUDINAL OSDR & TELEMETRY CHARTS -->
+        <div class="lg:col-span-4 glass-card rounded-2xl p-4 flex flex-col justify-between space-y-4">
+          <div>
+            <div class="flex items-center justify-between mb-1 gap-2">
+              <h2 id="chart1Heading" class="text-sm font-bold text-dmIce">المخطط الزمني للمؤشرات الحيوية</h2>
+              <select id="chartMetricSelect" class="bg-dmNavyDeep border border-dmCyan/30 rounded-lg px-2 py-1 text-xs text-dmCyan font-mono">
+                <option value="cardio">نبض القلب (bpm) وضغط الدم الانقباضي</option>
+                <option value="osdr_cytokines">بيانات OSDR OSD-575: الجلوكوز ومؤشر الالتهاب</option>
+                <option value="sans_co2">ثاني أكسيد الكربون ppCO2 وضغط العين IOP</option>
+                <option value="rad_immune">جرعة إشعاع RadLab وكرات الدم البيضاء OSD-569</option>
+              </select>
+            </div>
+            <p id="chart1Desc" class="text-xs text-dmSlate mb-2">
+              يقارن قراءات ما قبل الإطلاق (<code class="text-dmCyan">L-92, L-44, L-3</code>) وأثناء الرحلة (<code class="text-dmCyan">FD1–FD3</code>) وما بعد العودة (<code class="text-dmCyan">R+1</code>) من دراسة <a href="https://osdr.nasa.gov/bio/repo/data/studies/OSD-575" target="_blank" rel="noopener noreferrer" class="text-dmCyan underline">NASA OSDR OSD-575</a> مع السيناريو الحالي.
+            </p>
+            <div class="relative h-56 bg-dmNavyDeep/70 rounded-xl p-2 border border-dmCyan/15">
+              <canvas id="longitudinalChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Second Chart: 5 Hazards Radar / Multi-Domain Risk Profile -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <h3 id="chart2Heading" class="text-xs font-bold uppercase text-dmSlate">تحليل مخاطر الطيران الفضائي الخمسة (NASA HRP)</h3>
+              <span id="activeScenarioTagSmall" class="text-[11px] font-mono text-dmCyan">السيناريو 1</span>
+            </div>
+            <div class="relative h-48 bg-dmNavyDeep/70 rounded-xl p-2 border border-dmCyan/15">
+              <canvas id="hazardRadarChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 2: "CREWMATE DOWN" EMERGENCY TRIAGE & SPACEFLIGHT PK/PD DOSING   -->
+    <!-- ===================================================================== -->
+    <section id="view-emergency" class="hidden space-y-5">
+      <div class="glass-card rounded-2xl p-5 border-red-500/40">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-dmCyan/20 pb-4 mb-4">
+          <div>
+            <span id="emBadgeTop" class="text-xs font-mono uppercase px-2.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/40 font-bold">
+              العمليات الطبية المستقلة عن الأرض (NASA Ames ExMC CDSS)
+            </span>
+            <h2 id="emergencyHeaderTitle" class="text-lg font-extrabold text-dmIce mt-1">
+              بروتوكول الطوارئ: انهيار مفاجئ وألم حاد في الصدر أثناء رحلة المريخ (0G)
+            </h2>
+            <p id="emergencyHeaderSub" class="text-xs text-dmSlate">
+              تطبيق مباشر لأزمة الفيديو الرسمي للتحدي (رودريغو ليوناردي - وكالة الفضاء البرازيلية AEB): فرز طبي ذاتي لغير الأطباء مع تأخر اتصال 14 دقيقة و20 ثانية عن الأرض.
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="transmitPacketBtn" type="button" class="px-4 py-2 rounded-xl bg-dmCyan text-dmNavy font-bold text-xs hover:bg-dmCyan/90 transition">
+              إنشاء وإرسال حزمة بيانات طبيب الرحلة (Store-and-Forward)
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <!-- Interactive 4-Step Non-Doctor Emergency Decision Tree (7 cols) -->
+          <div class="lg:col-span-7 space-y-3">
+            <h3 id="emStepsHeading" class="text-xs font-bold uppercase tracking-wider text-dmCyan">
+              تسلسل التدخل الإسعافي لغير الأطباء (اضغط على كل خطوة عند إتمامها)
+            </h3>
+            <div id="emergencyStepsList" class="space-y-2.5">
+              <!-- Populated dynamically via renderEmergencyView() -->
+            </div>
+          </div>
+
+          <!-- Spaceflight-Adjusted Pharmacy (PK/PD) & Async Telemetry Packet Preview (5 cols) -->
+          <div class="lg:col-span-5 space-y-4">
+            <div class="p-4 rounded-xl bg-dmNavyDeep/90 border border-dmViolet/40 space-y-3">
+              <div class="flex items-center justify-between">
+                <h3 id="pkHeading" class="text-xs font-bold uppercase tracking-wider text-purple-300">
+                  حاسبة تعديل الجرعات الدوائية الفضائية (Spaceflight PK/PD)
+                </h3>
+                <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6565689/" target="_blank" rel="noopener noreferrer" class="text-[11px] font-mono text-dmCyan underline">PMC6565689</a>
+              </div>
+              <p id="pkDesc" class="text-xs text-dmSlate">
+                يؤدي انعدام الجاذبية إلى تغير تدفق الدم الكبدي وإفراغ المعدة، بينما تُضعف الأشعة الكونية فاعلية الأدوية المخزنة بمرور أيام المهمة. عدّل وزن الرائد وأيام المهمة لحساب الجرعة الفضائية الدقيقة:
+              </p>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label id="lblPkMass" for="pkMassInput" class="block text-[11px] font-mono text-dmSlate mb-1">وزن رائد الفضاء (كجم)</label>
+                  <input id="pkMassInput" type="number" min="45" max="120" value="76" class="w-full bg-dmNavyCard border border-dmCyan/30 rounded-lg px-2.5 py-1.5 text-xs text-dmIce font-mono" />
+                </div>
+                <div>
+                  <label id="lblPkDays" for="pkMissionDaysInput" class="block text-[11px] font-mono text-dmSlate mb-1">الأيام المنقضية من المهمة</label>
+                  <input id="pkMissionDaysInput" type="number" min="1" max="500" value="142" class="w-full bg-dmNavyCard border border-dmCyan/30 rounded-lg px-2.5 py-1.5 text-xs text-dmIce font-mono" />
+                </div>
+              </div>
+
+              <div id="pkOutputBox" class="p-3 rounded-lg bg-dmNavyCard/90 border border-dmCyan/25 space-y-1.5 text-xs">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+
+            <!-- Asynchronous Flight Surgeon Telemetry Bundle -->
+            <div class="p-4 rounded-xl bg-dmNavyDeep/90 border border-dmCyan/30 space-y-2">
+              <div class="flex items-center justify-between">
+                <h3 id="packetHeading" class="text-xs font-bold uppercase tracking-wider text-dmCyan">
+                  حزمة البيانات المضغوطة لطبيب الرحلة على الأرض (JSON)
+                </h3>
+                <button id="copyPacketBtn" type="button" class="text-[11px] font-mono px-2 py-0.5 rounded bg-dmCyan/20 text-dmCyan hover:bg-dmCyan/30">
+                  نسخ JSON
+                </button>
+              </div>
+              <pre id="telemetryPacketPre" dir="ltr" class="text-left text-[11px] font-mono text-dmSlate bg-dmNavyCard p-3 rounded-lg overflow-x-auto max-h-48"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 3: GAMIFIED MISSION ROUTINE & MULTI-MODAL INPUT SIMULATOR        -->
+    <!-- ===================================================================== -->
+    <section id="view-routine" class="hidden space-y-5">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+        <!-- Left (6 cols): Multi-Modal Sensor & Manual Health Input Simulator -->
+        <div class="lg:col-span-6 glass-card rounded-2xl p-5 space-y-4">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <h2 id="simInputHeading" class="text-base font-bold text-dmIce">محاكي إدخال القياسات الحيوية متعدد الوسائط</h2>
+              <p id="simInputDesc" class="text-xs text-dmSlate">
+                غيّر أي مؤشر صحي عبر أشرطة التمرير أو الفحوصات التصويرية لمحاكاة استجابة النظام الفورية وتغير الألوان التحذيرية.
+              </p>
+            </div>
+            <span id="simLiveBadge" class="text-xs font-mono px-2.5 py-1 rounded bg-dmCyan/15 text-dmCyan border border-dmCyan/30 shrink-0">تحديث لحظي</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5" id="sliderControlsGrid">
+            <!-- Heart Rate -->
+            <div class="p-3 rounded-xl bg-dmNavyDeep/80 border border-dmCyan/20">
+              <div class="flex justify-between text-xs mb-1">
+                <label id="lblSliderHR" for="inputHR" class="font-semibold text-dmIce">معدل نبض القلب (bpm)</label>
+                <span id="valHR" class="font-mono text-dmCyan font-bold ltr-num">134 bpm</span>
+              </div>
+              <input id="inputHR" type="range" min="42" max="185" step="1" value="134" class="w-full" />
+              <div class="flex justify-between text-[10px] font-mono text-dmSlate mt-1">
+                <span>طبيعي 0G: 52–88</span>
+                <span>إنذار: &gt;105 bpm</span>
+              </div>
+            </div>
+
+            <!-- Systolic BP -->
+            <div class="p-3 rounded-xl bg-dmNavyDeep/80 border border-dmCyan/20">
+              <div class="flex justify-between text-xs mb-1">
+                <label id="lblSliderBP" for="inputSysBP" class="font-semibold text-dmIce">ضغط الدم الانقباضي (mmHg)</label>
+                <span id="valSysBP" class="font-mono text-dmCyan font-bold ltr-num">92 mmHg</span>
+              </div>
+              <input id="inputSysBP" type="range" min="75" max="180" step="1" value="92" class="w-full" />
+              <div class="flex justify-between text-[10px] font-mono text-dmSlate mt-1">
+                <span>طبيعي 0G: 100–125</span>
+                <span>صدمة &lt;95 / ارتفاع &gt;140</span>
+              </div>
+            </div>
+
+            <!-- Blood Sugar -->
+            <div class="p-3 rounded-xl bg-dmNavyDeep/80 border border-dmCyan/20">
+              <div class="flex justify-between text-xs mb-1">
+                <label id="lblSliderGlucose" for="inputGlucose" class="font-semibold text-dmIce">سكر الدم (mg/dL)</label>
+                <span id="valGlucose" class="font-mono text-dmCyan font-bold ltr-num">148 mg/dL</span>
+              </div>
+              <input id="inputGlucose" type="range" min="45" max="220" step="1" value="148" class="w-full" />
+              <div class="flex justify-between text-[10px] font-mono text-dmSlate mt-1">
+                <span>طبيعي: 72–110</span>
+                <span>هبوط &lt;70 / ارتفاع &gt;130</span>
+              </div>
+            </div>
+
+            <!-- Blood Oxygen SpO2 -->
+            <div class="p-3 rounded-xl bg-dmNavyDeep/80 border border-dmCyan/20">
+              <div class="flex justify-between text-xs mb-1">
+                <label id="lblSliderSpO2" for="inputSpO2" class="font-semibold text-dmIce">تشبع الأكسجين SpO2 (%)</label>
+                <span id="valSpO2" class="font-mono text-dmCyan font-bold ltr-num">91%</span>
+              </div>
+              <input id="inputSpO2" type="range" min="82" max="100" step="1" value="91" class="w-full" />
+              <div class="flex justify-between text-[10px] font-mono text-dmSlate mt-1">
+                <span>طبيعي: 96–100%</span>
+                <span>نقص أكسجة: &lt;93%</span>
+              </div>
+            </div>
+
+            <!-- Body Temperature -->
+            <div class="p-3 rounded-xl bg-dmNavyDeep/80 border border-dmCyan/20">
+              <div class="flex justify-between text-xs mb-1">
+                <label id="lblSliderTemp" for="inputTemp" class="font-semibold text-dmIce">درجة حرارة الجسم (°C)</label>
+                <span id="valTemp" class="font-mono text-dmCyan font-bold ltr-num">37.9 °C</span>
+              </div>
+              <input id="inputTemp" type="range" min="35.5" max="40.2" step="0.1" value="37.9" class="w-full" />
+              <div class="flex justify-between text-[10px] font-mono text-dmSlate mt-1">
+                <span>طبيعي: 36.3–37.3 °C</span>
+                <span>حمى: &gt;37.8 °C</span>
+              </div>
+            </div>
+
+            <!-- Cabin ppCO2 -->
+            <div class="p-3 rounded-xl bg-dmNavyDeep/80 border border-dmCyan/20">
+              <div class="flex justify-between text-xs mb-1">
+                <label id="lblSliderCO2" for="inputCO2" class="font-semibold text-dmIce">ثاني أكسيد الكربون ppCO2</label>
+                <span id="valCO2" class="font-mono text-dmCyan font-bold ltr-num">2.4 mmHg</span>
+              </div>
+              <input id="inputCO2" type="range" min="0.5" max="6.5" step="0.1" value="2.4" class="w-full" />
+              <div class="flex justify-between text-[10px] font-mono text-dmSlate mt-1">
+                <span>حد NASA-STD-3001: ≤3.0</span>
+                <span>خطر: &gt;3.5 mmHg</span>
+              </div>
+            </div>
+
+            <!-- Intraocular Pressure (SANS) -->
+            <div class="p-3 rounded-xl bg-dmNavyDeep/80 border border-dmCyan/20">
+              <div class="flex justify-between text-xs mb-1">
+                <label id="lblSliderIOP" for="inputIOP" class="font-semibold text-dmIce">ضغط العين الداخلي IOP (mmHg)</label>
+                <span id="valIOP" class="font-mono text-dmCyan font-bold ltr-num">16 mmHg</span>
+              </div>
+              <input id="inputIOP" type="range" min="10" max="30" step="1" value="16" class="w-full" />
+              <div class="flex justify-between text-[10px] font-mono text-dmSlate mt-1">
+                <span>طبيعي: 11–18 mmHg</span>
+                <span>خطر SANS: &gt;21 mmHg</span>
+              </div>
+            </div>
+
+            <!-- Daily Sleep & Mood -->
+            <div class="p-3 rounded-xl bg-dmNavyDeep/80 border border-dmCyan/20">
+              <div class="flex justify-between text-xs mb-1">
+                <label id="lblSliderSleep" for="inputSleep" class="font-semibold text-dmIce">ساعات النوم اليومية (ساعة/24h)</label>
+                <span id="valSleep" class="font-mono text-dmCyan font-bold ltr-num">4.2 hrs</span>
+              </div>
+              <input id="inputSleep" type="range" min="2.0" max="9.5" step="0.2" value="4.2" class="w-full" />
+              <div class="flex justify-between text-[10px] font-mono text-dmSlate mt-1">
+                <span>طبيعي: 7.0–8.5 ساعة</span>
+                <span>نقص حاد: &lt;6.0h</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Simulated Camera / Ultrasound / Bio-Analyzer Scan Input -->
+          <div class="p-3.5 rounded-xl bg-dmNavyDeep/90 border border-dmCyan/25 flex flex-wrap items-center justify-between gap-3">
+            <div class="text-xs">
+              <div id="scanBoxTitle" class="font-bold text-dmIce">محاكاة الفحص بالموجات فوق الصوتية POCUS وتصوير الشبكية OCT و Bio-Analyzer</div>
+              <p id="scanBoxSub" class="text-dmSlate">شغّل فحصاً تصويرياً أو معملياً فورياً لإرفاق نتيجته في السجل الطبي لرائد الفضاء.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" data-scan="ultrasound" id="btnScanUltrasound" class="scan-sim-btn px-3 py-1.5 rounded-lg bg-dmCyan/20 hover:bg-dmCyan/30 border border-dmCyan/40 text-xs font-mono text-dmCyan">
+                سونار الصدر POCUS
+              </button>
+              <button type="button" data-scan="oct" id="btnScanOCT" class="scan-sim-btn px-3 py-1.5 rounded-lg bg-dmViolet/25 hover:bg-dmViolet/40 border border-dmViolet/50 text-xs font-mono text-purple-200">
+                تصوير الشبكية OCT
+              </button>
+              <button type="button" data-scan="bioanalyzer" id="btnScanBio" class="scan-sim-btn px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-xs font-mono text-emerald-300">
+                تحليل قطرة دم Bio-Analyzer
+              </button>
+            </div>
+          </div>
+          <div id="scanResultBanner" class="hidden p-3 rounded-xl bg-dmNavyCard border border-dmCyan/40 text-xs font-mono text-dmIce"></div>
+        </div>
+
+        <!-- Right (6 cols): Gamified Mission Health Routine & Prompt Scheduler -->
+        <div class="lg:col-span-6 glass-card rounded-2xl p-5 flex flex-col justify-between space-y-4">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <div>
+                <h2 id="routineHeading" class="text-base font-bold text-dmIce">الروتين الصحي التحفيزي (Gamification) والتنبيهات المجدولة</h2>
+                <p id="routineSub" class="text-xs text-dmSlate">
+                  يلبي متطلب التحدي الرسمي في تحفيز رواد الفضاء وتذكيرهم بأخذ القياسات الدورية والتمارين الوقائية.
+                </p>
+              </div>
+              <div class="text-left">
+                <div id="lblXpScore" class="text-xs font-mono text-dmCyan font-bold">نقاط جاهزية الطاقم</div>
+                <div id="xpCounterText" class="text-lg font-extrabold font-mono text-dmIce">340 XP • المستوى 4</div>
+              </div>
+            </div>
+
+            <!-- XP Progress Bar -->
+            <div class="w-full h-2.5 bg-dmNavyDeep rounded-full overflow-hidden border border-dmCyan/20 mb-4">
+              <div id="xpProgressBar" class="h-full bg-gradient-to-r from-dmCyan to-dmViolet transition-all duration-300" style="width: 68%"></div>
+            </div>
+
+            <!-- Routine Checklist Items -->
+            <div id="routineChecklistContainer" class="space-y-2.5">
+              <!-- Populated dynamically via renderRoutineChecklist() -->
+            </div>
+          </div>
+
+          <!-- Add Custom Crew Log Note -->
+          <div class="pt-3 border-t border-dmCyan/20">
+            <label id="lblSymptomNote" for="crewSymptomInput" class="block text-xs font-bold text-dmIce mb-1.5">تسجيل عرض صحي أو ملاحظة يومية لرائد الفضاء</label>
+            <div class="flex gap-2">
+              <input id="crewSymptomInput" type="text" placeholder="مثال: صداع خفيف في الجبهة بعد إعادة ضغط غرفة معادلة الضغط EVA..." class="flex-1 bg-dmNavyDeep border border-dmCyan/30 rounded-xl px-3 py-2 text-xs text-dmIce focus:outline-none focus:border-dmCyan" />
+              <button id="addSymptomLogBtn" type="button" class="px-4 py-2 rounded-xl bg-dmCyan text-dmNavy font-bold text-xs hover:bg-dmCyan/90 transition">
+                تسجيل الملاحظة (+15 XP)
+              </button>
+            </div>
+            <div id="symptomLogHistory" class="mt-2.5 space-y-1.5 max-h-28 overflow-y-auto text-xs font-mono text-dmSlate"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 4: OFFICIAL NASA & SPACE AGENCY PARTNER RESOURCE EXPLORER        -->
+    <!-- ===================================================================== -->
+    <section id="view-resources" class="hidden space-y-4">
+      <div class="glass-card rounded-2xl p-5">
+        <h2 id="resHeading" class="text-base font-bold text-dmIce mb-1">
+          معمارية المصادر والبيانات الرسمية للتحدي (NASA &amp; Space Agency Partners)
+        </h2>
+        <p id="resSub" class="text-xs text-dmSlate mb-4">
+          جميع المعدلات المرجعية والحدود الحرجة وبروتوكولات الأجهزة في منصة AURA-EIMO مبنية مباشرة على مصادر برنامج أبحاث الإنسان (NASA HRP) ومستودع العلوم المفتوحة (NASA OSDR) ومعايير NASA-STD-3001 وأجهزة وكالة الفضاء الكندية (CSA).
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          <div class="p-4 rounded-xl bg-dmNavyDeep/90 border border-dmCyan/25 space-y-1.5">
+            <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-dmCyan/15 text-dmCyan">بيان التحدي الرسمي • AEB &amp; NASA</span>
+            <h3 class="text-sm font-bold text-dmIce">وصف التحدي وفيديو وكالة الفضاء البرازيلية</h3>
+            <p class="text-xs text-dmSlate">قدمه رودريغو ليوناردي (القائم بأعمال رئيس وكالة الفضاء البرازيلية AEB)، ويحدد أزمة ألم الصدر والانهيار في طريق المريخ، وإرشاد غير الأطباء، وتعدد بيئات الفضاء.</p>
+            <div class="pt-1 flex flex-wrap gap-2 text-xs font-mono">
+              <a href="https://www.spaceappschallenge.org/2026/challenges/health-monitoring-software/" target="_blank" rel="noopener noreferrer" class="text-dmCyan underline">صفحة التحدي</a>
+              <a href="https://www.youtube.com/watch?v=RERG3gEmdC8" target="_blank" rel="noopener noreferrer" class="text-dmCyan underline">الفيديو الرسمي</a>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-dmNavyDeep/90 border border-dmCyan/25 space-y-1.5">
+            <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-dmCyan/15 text-dmCyan">بيانات NASA OSDR الحيوية</span>
+            <h3 class="text-sm font-bold text-dmIce">دراسات OSD-575 و OSD-569 و OSD-571</h3>
+            <p class="text-xs text-dmSlate">تحاليل الأيض الشامل والسيتوكينات القلبية/المناعية وصورة الدم الكاملة CBC لأربعة رواد فضاء عبر نقاط الزمن (L-92, L-44, L-3, FD1–FD3, R+1–R+194).</p>
+            <div class="pt-1 flex flex-wrap gap-2 text-xs font-mono">
+              <a href="https://osdr.nasa.gov/bio/repo/data/studies/OSD-575" target="_blank" rel="noopener noreferrer" class="text-dmCyan underline">OSD-575</a>
+              <a href="https://osdr.nasa.gov/bio/repo/data/studies/OSD-569" target="_blank" rel="noopener noreferrer" class="text-dmCyan underline">OSD-569</a>
+              <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11094041/" target="_blank" rel="noopener noreferrer" class="text-dmCyan underline">PMC11094041</a>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-dmNavyDeep/90 border border-dmCyan/25 space-y-1.5">
+            <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-dmCyan/15 text-dmCyan">المعايير الطبية • NASA-STD-3001</span>
+            <h3 class="text-sm font-bold text-dmIce">NASA-STD-3001 و CO2 (TB-004) و SANS (MTB-001)</h3>
+            <p class="text-xs text-dmSlate">يحدد المخاطر الخمسة للطيران الفضائي، والحد الأقصى لمتوسط ppCO2 البالغ ≤3.0 mmHg ([V2 6004])، ومعايير تشخيص متلازمة العين العصبية SANS بـ OCT.</p>
+            <div class="pt-1 flex flex-wrap gap-2 text-xs font-mono">
+              <a href="https://www.nasa.gov/wp-content/uploads/2023/11/nasa-std-3001-vol-1-rev-c-with-signature.pdf" target="_blank" rel="noopener noreferrer" class="text-dmCyan underline">NASA-STD-3001 V1</a>
+              <a href="https://www.nasa.gov/wp-content/uploads/2023/03/co2-technical-brief-ochmo.pdf" target="_blank" rel="noopener noreferrer" class="text-dmCyan underline">OCHMO-TB-004 CO2</a>
+              <a href="https://www.nasa.gov/wp-content/uploads/2024/02/ochmo-mtb-001-sans.pdf?emrc=d4c581" target="_blank" rel="noopener noreferrer" class="text-dmCyan underline">OCHMO-MTB-001 SANS</a>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-dmNavyDeep/90 border border-dmCyan/25 space-y-1.5">
+            <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-dmCyan/15 text-dmCyan">أجهزة وكالة الفضاء الكندية • CSA</span>
+            <h3 class="text-sm font-bold text-dmIce">القميص الذكي Bio-Monitor وجهاز Bio-Analyzer</h3>
+            <p class="text-xs text-dmSlate">قميص ذكي يقيس تخطيط القلب ECG وضغط الدم والتنفس و SpO2 والحرارة والنشاط البدني، مع جهاز Bio-Analyzer لتحليل قطرات الدم واللعاب والبول.</p>
+            <div class="pt-1 flex flex-wrap gap-2 text-xs font-mono">
+              <a href="https://www.asc-csa.gc.ca/eng/sciences/bio-monitor.asp" target="_blank" rel="noopener noreferrer" class="text-dmCyan underline">CSA Bio-Monitor</a>
+              <a href="https://www.asc-csa.gc.ca/eng/iss/bio-analyzer.asp" target="_blank" rel="noopener noreferrer" class="text-dmCyan underline">CSA Bio-Analyzer</a>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-dmNavyDeep/90 border border-dmCyan/25 space-y-1.5">
+            <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-dmCyan/15 text-dmCyan">واجهات الإشعاع والبيئة • API</span>
+            <h3 class="text-sm font-bold text-dmIce">OSDR RadLab وتطبيق البيانات البيئية (EDA)</h3>
+            <p class="text-xs text-dmSlate">بيانات الجرعات الإشعاعية من حساسات DOSTEL و Lidal و Liulin-5 مع حرارة المقصورة والرطوبة وضغط غاز ثاني أكسيد الكربون.</p>
+            <div class="pt-1 flex flex-wrap gap-2 text-xs font-mono">
+              <a href="https://visualization.osdr.nasa.gov/radlab/gui/overview/" target="_blank" rel="noopener noreferrer" class="text-dmCyan underline">OSDR RadLab</a>
+              <a href="https://visualization.osdr.nasa.gov/eda/" target="_blank" rel="noopener noreferrer" class="text-dmCyan underline">OSDR EDA</a>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-dmNavyDeep/90 border border-dmCyan/25 space-y-1.5">
+            <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-dmCyan/15 text-dmCyan">دعم القرار الطبي الذاتي • CDSS</span>
+            <h3 class="text-sm font-bold text-dmIce">NASA Ames ExMC CDSS وحركية الدواء الفضائية</h3>
+            <p class="text-xs text-dmSlate">معمارية القرار السريري للمهمات المستقلة عن الأرض EIMO ومعادلات تعديل الجرعات الدوائية PK/PD نتيجة انعدام الجاذبية والإشعاع الكوني.</p>
+            <div class="pt-1 flex flex-wrap gap-2 text-xs font-mono">
+              <a href="https://www.nasa.gov/centers-and-facilities/ames/ames-science/ames-space-biosciences/a-clinical-decision-support-system-for-earth-independent-medical-operations/" target="_blank" rel="noopener noreferrer" class="text-dmCyan underline">Ames ExMC CDSS</a>
+              <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6565689/" target="_blank" rel="noopener noreferrer" class="text-dmCyan underline">Space PK/PD Study</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOAST NOTIFICATION BANNER -->
+    <div id="toastBanner" class="fixed bottom-4 left-4 z-50 hidden px-4 py-3 rounded-xl bg-dmNavyCard border border-dmCyan text-xs font-mono text-dmIce shadow-2xl"></div>
+
+  </main>
+
+  <script>
+    // =========================================================================
+    // BILINGUAL (ARABIC DEFAULT + ENGLISH TOGGLE) GROUNDED DATA STORE
+    // =========================================================================
+    const SCENARIOS = {
+      mars_collapse: {
+        id: 'mars_collapse',
+        ar: {
+          badge: 'السيناريو 1 • مركبة الفضاء العميق 0G',
+          environment: 'مركبة الفضاء العميق (رحلة المريخ — 0G)',
+          latency: '14 د 20 ث اتجاه واحد (وضع ذاتي EIMO)',
+          emergencyTitle: 'بروتوكول الطوارئ: انهيار مفاجئ وألم حاد في الصدر أثناء رحلة المريخ (0G)',
+          emergencySub: 'تطبيق مباشر لأزمة الفيديو الرسمي للتحدي (رودريغو ليوناردي - وكالة الفضاء البرازيلية AEB): في منتصف الطريق إلى المريخ مع تأخر اتصال 14 د 20 ث وعاصفة إشعاعية شمسية (1.85 mSv/day).',
+          drugName: 'بروتوكول الأسبرين ومضاد التجلط منخفض الوزن الجزيئي + محلول ملحي وريدي',
+          drugRationale: 'في انعدام الجاذبية 0G مع هبوط الضغط (92/58 mmHg)، يُمنع إعطاء النيتروجليسرين قبل تثبيت الامتلاء البطيني بـ 250 مل محلول ملحي وريدي؛ ويُعدّل حساب مضاد التجلط ومضاد اضطراب النبض بنسبة 18% لتعويض تغير التروية الكبدية وتحلل الدواء بالإشعاع خلال 142 يوماً (PMC6565689).',
+          steps: [
+            {
+              id: 'step1',
+              title: '1. تثبيت رائد الفضاء في انعدام الجاذبية (0G) وتفعيل تخطيط القلب عبر قميص CSA Bio-Monitor',
+              detail: 'ثبّت الزميل المنهار بأحزمة لوح الإنعاش الطبي فوراً (الضغطات الصدرية أو السونار لا تنجح أثناء الطفو الحر). شدّ حزام الصدر للقميص الذكي CSA Bio-Monitor ورطّب الأقطاب المعدنية بقطرتي ماء للتحقق من وجود رجفان بطيني أو نقص تروية تاجي حاد.',
+              done: false
+            },
+            {
+              id: 'step2',
+              title: '2. فحص الصدر والقلب بالموجات فوق الصوتية المحمولة (POCUS — نافذتان)',
+              detail: 'ضع مسبار السونار في الحيز الوربي الثاني على خط منتصف الترقوة (لاستبعاد استرواح الصدر التلقائي في الجاذبية الصغرى) ثم تحت الرهابة Subxiphoid (لاستبعاد الانصباب التاموري أو إجهاد البطين الأيمن الناتج عن الجلطات الوريدية).',
+              done: false
+            },
+            {
+              id: 'step3',
+              title: '3. تحليل قطرة دم شعرية في جهاز CSA Bio-Analyzer (لوحة القلب OSD-575)',
+              detail: 'اسحب 3 قطرات دم (60 ميكرولتر) من طرف الإصبع وضعها في خرطوشة CSA Bio-Analyzer لقياس التروبونين القلبي عالي الحساسية (hs-Troponin I) و D-dimer والسيتوكينات الالتهابية IL-6/CRP مقارنة بخط الأساس L-92.',
+              done: false
+            },
+            {
+              id: 'step4',
+              title: '4. إعطاء الجرعة الدوائية المعدلة فضائياً (PK/PD) وإرسال حزمة طبيب الرحلة',
+              detail: 'زود الرائد بأكسجين 100% عبر القناع (4 لتر/دقيقة)، وابدأ تسريب 250 مل محلول ملحي متساوي التوتر لعلاج هبوط الضغط (92/58 mmHg)، وأعطِ الجرعة المعايرة فضائياً ثم أرسل حزمة البيانات المضغوطة لمركز التحكم بالأرض.',
+              done: false
+            }
+          ]
+        },
+        en: {
+          badge: 'Scenario 1 • 0G Deep-Space Transit',
+          environment: '0G Deep-Space Transit Spacecraft (Mars Transfer)',
+          latency: '14m 20s One-Way (EIMO Autonomous Mode)',
+          emergencyTitle: 'Protocol: Acute Crewmate Chest-Pain Collapse in Deep-Space Transit (0G)',
+          emergencySub: 'Direct implementation of the official challenge video scenario (Rodrigo Leonardi, AEB): halfway to Mars with a 14m 20s one-way radio delay and active Solar Particle Event (1.85 mSv/day).',
+          drugName: 'Chewable Aspirin & Low-Molecular-Weight Heparin + IV Isotonic Saline Protocol',
+          drugRationale: 'In 0G cephalad fluid shift + hypotension (92/58 mmHg), stabilize right-ventricular preload with 250 mL IV normal saline bolus before vasodilators; adjust antiarrhythmic/anticoagulant dose for altered microgravity hepatic perfusion and 142-day radiation shelf-life drift (PMC6565689).',
+          steps: [
+            {
+              id: 'step1',
+              title: '1. Zero-G Restraint & CSA Bio-Monitor 3-Lead ECG Lock',
+              detail: 'Secure collapsed crewmate to the medical restraint surface. Tighten the CSA Bio-Monitor smart shirt chest strap and moisten dry skin electrodes to confirm whether rhythm is shockable VT/VF or acute ST-elevation ischemia.',
+              done: false
+            },
+            {
+              id: 'step2',
+              title: '2. Point-of-Care Thoracic Ultrasound (POCUS) 2-Window Scan',
+              detail: 'Place ultrasound probe at the 2nd intercostal space mid-clavicular line (rule out pneumothorax) and subxiphoid window (rule out pericardial effusion or right-ventricular strain).',
+              done: false
+            },
+            {
+              id: 'step3',
+              title: '3. CSA Bio-Analyzer Capillary Blood Drop (OSD-575 Cardiac Panel)',
+              detail: 'Lance ring finger, load 3 drops (60 uL) into the CSA Bio-Analyzer cartridge to quantify hs-Troponin I, D-dimer, and IL-6/CRP cytokine surge (NASA OSDR OSD-575 baseline comparison).',
+              done: false
+            },
+            {
+              id: 'step4',
+              title: '4. Administer Space-Calibrated Countermeasure & Queue Store-and-Forward Packet',
+              detail: 'Deliver 100% O2 via mask (4 L/min), infuse 250 mL isotonic saline for 0G plasma-volume contraction (92/58 mmHg), administer PK/PD-adjusted medication, and transmit the compressed diagnostic bundle.',
+              done: false
+            }
+          ]
+        },
+        defaultOrgan: 'cardio',
+        metrics: {
+          hr: 134,
+          sysBP: 92,
+          diaBP: 58,
+          glucose: 148,
+          spo2: 91,
+          temp: 37.9,
+          co2: 2.4,
+          iop: 16,
+          sleep: 4.2,
+          mood: 3,
+          radiation: 1.85
+        },
+        hazardRadar: [92, 78, 95, 85, 68],
+        baseDoseMgPerKg: 0.85,
+        pkAdjustmentFactor: 0.82
+      },
+
+      station_sans_co2: {
+        id: 'station_sans_co2',
+        ar: {
+          badge: 'السيناريو 2 • محطة فضائية مدارية 0G',
+          environment: 'محطة فضائية مدارية 0G (ISS / Lunar Gateway)',
+          latency: '1.2 ث اتصال شبه لحظي',
+          emergencyTitle: 'بروتوكول الطوارئ: ارتفاع غاز CO2 (4.2 mmHg) وتطور متلازمة العين العصبية (SANS)',
+          emergencySub: 'تجاوز متوسط ضغط ثاني أكسيد الكربون ppCO2 حد معيار NASA-STD-3001 [V2 6004] البالغ 3.0 mmHg، مما يزيد توسع الأوعية الدماغية ووذمة القرص البصري (OCHMO-MTB-001).',
+          drugName: 'أسيتازولاميد (مثبط الأنهيدراز الكربوني) + جلسة الضغط السلبي للجزء السفلي (LBNP)',
+          drugRationale: 'يؤدي ارتفاع ppCO2 (4.2 mmHg) إلى توسع الشرايين الدماغية وزيادة احتقان الوريد الوداجي وضغط العين (23 mmHg). شغّل مروحة التهوية الشخصية فوراً وعدّل جرعة الأسيتازولاميد بنسبة -10% لتغير التصفية الكلوية في 0G.',
+          steps: [
+            {
+              id: 'step1',
+              title: '1. تبديد جيب غاز CO2 المحلي والتحقق من حساس OSDR EDA',
+              detail: 'شغّل مروحة التهوية الشخصية فوراً (في انعدام الجاذبية 0G يتجمع غاز الزفير حول الرأس لعدم وجود تيارات حمل حراري طبيعية) وقارن القراءة بحد NASA-STD-3001 البالغ 3.0 mmHg (وثيقة OCHMO-TB-004).',
+              done: false
+            },
+            {
+              id: 'step2',
+              title: '2. قياس ضغط العين المحمول (Tonometry) واختبار حدة الإبصار Acuity Pro',
+              detail: 'وجّه مقياس ضغط العين الارتدادي عمودياً على مركز القرنية (3 قراءات لكل عين؛ القراءة الحالية: 23 mmHg) وأجرِ فحص الشبكة البصرية Amsler لتحديد انحراف طول النظر (+0.75 D).',
+              done: false
+            },
+            {
+              id: 'step3',
+              title: '3. تصوير مقطعي للترابط البصري للشبكية والعصب البصري (OCT)',
+              detail: 'التقط مسحاً لسمك طبقة الألياف العصبية للشبكية (RNFL) والسمك الكلي للشبكية (TRT) وفق بروتوكول OCHMO-MTB-001 (نقاط الفحص L+30 و L+90) لرصد وذمة القرص البصري المبكرة.',
+              done: false
+            },
+            {
+              id: 'step4',
+              title: '4. ارتداء نظارات تصحيح طول النظر الفضائية وجلسة LBNP لمدة 45 دقيقة',
+              detail: 'استخدم نظارات Space Anticipation Glasses (+0.75 D) للمهام الدقيقة، وابدأ جلسة الضغط السلبي للجزء السفلي من الجسم (LBNP -25 mmHg) لسحب السوائل نحو الساقين، وأرسل صور OCT لطبيب الرحلة.',
+              done: false
+            }
+          ]
+        },
+        en: {
+          badge: 'Scenario 2 • 0G Orbital Space Station',
+          environment: '0G Orbital Space Station (ISS / Lunar Gateway)',
+          latency: '1.2s Near-Real-Time Relay',
+          emergencyTitle: 'Protocol: Hypercapnic Cabin CO2 Spike (4.2 mmHg) & Neuro-Ocular SANS Progression',
+          emergencySub: 'CDRA scrubber saturation pushes 1-hr average ppCO2 above NASA-STD-3001 [V2 6004] limit (3.0 mmHg), compounding cephalad venous engorgement and optic disc edema (OCHMO-MTB-001).',
+          drugName: 'Acetazolamide (Carbonic Anhydrase Inhibitor) & Lower-Body Negative Pressure (LBNP)',
+          drugRationale: 'Elevated cabin ppCO2 (4.2 mmHg) induces cerebral vasodilation, worsening intracranial/intraocular fluid shift (IOP 23 mmHg). Apply portable airflow fan immediately and adjust Acetazolamide dose by -10% for microgravity renal clearance shift.',
+          steps: [
+            {
+              id: 'step1',
+              title: '1. Eliminate Local CO2 Pocket & Verify OSDR EDA Sensor',
+              detail: 'Turn on personal crew-quarters ventilation fan immediately (in 0G, exhaled CO2 forms a stagnant bubble around the head) and cross-check against NASA-STD-3001 3.0 mmHg limit (OCHMO-TB-004).',
+              done: false
+            },
+            {
+              id: 'step2',
+              title: '2. Self-Administer Portable Tonometry & Acuity Pro Check',
+              detail: 'Hold rebound tonometer perpendicular to central cornea (current IOP: 23 mmHg) and complete the laptop Acuity Pro / Amsler grid test to quantify hyperopic refractive shift (+0.75 D).',
+              done: false
+            },
+            {
+              id: 'step3',
+              title: '3. Optical Coherence Tomography (OCT) Peripapillary Scan',
+              detail: 'Capture retinal nerve fiber layer (RNFL) and total retinal thickness (TRT) scan per OCHMO-MTB-001 (L+30/L+90 protocol) to check for Frisén grade 1 optic disc edema.',
+              done: false
+            },
+            {
+              id: 'step4',
+              title: '4. Deploy Space Anticipation Glasses & 45-Min LBNP Countermeasure',
+              detail: 'Switch to +0.75 D Space Anticipation Glasses, initiate a 45-minute Lower-Body Negative Pressure (LBNP -25 mmHg) session, and log OCT telemetry for Flight Surgeon review.',
+              done: false
+            }
+          ]
+        },
+        defaultOrgan: 'neuro',
+        metrics: {
+          hr: 78,
+          sysBP: 128,
+          diaBP: 84,
+          glucose: 106,
+          spo2: 96,
+          temp: 37.1,
+          co2: 4.2,
+          iop: 23,
+          sleep: 5.4,
+          mood: 6,
+          radiation: 0.42
+        },
+        hazardRadar: [48, 72, 35, 88, 94],
+        baseDoseMgPerKg: 3.5,
+        pkAdjustmentFactor: 0.90
+      },
+
+      lunar_eva_dust: {
+        id: 'lunar_eva_dust',
+        ar: {
+          badge: 'السيناريو 3 • قاعدة سطح القمر 1/6G',
+          environment: 'قاعدة القطب الجنوبي للقمر والعربة المضغوطة (1/6G)',
+          latency: '2.6 ث عبر شبكة الفضاء العميق القمرية',
+          emergencyTitle: 'بروتوكول الطوارئ: استنشاق غبار القمر (الريجوليث) وهبوط السكر بعد السير الفضائي EVA',
+          emergencySub: 'بعد نشاط ميداني EVA لمدة 6 ساعات على سطح القمر (1/6G)، تسببت جزيئات السيليكات الحادة المشحونة كهروستاتيكياً (<2 ميكرون) في تهيج الشعب الهوائية (SpO2 93%) مع هبوط السكر الإجهادي (64 mg/dL).',
+          drugName: 'جل الجلوكوز الفموي السريع (15 جم) + موسع الشعب الهوائية ألبوتيرول وغسول ملحي',
+          drugRationale: 'في جاذبية القمر الجزئية 1/6G تبقى ذرات غبار الريجوليث الدقيقة معلقة لفترة أطول في الشعب الهوائية وتترسب في الحويصلات. استنشق بخختين من موسع الشعب مع غسول ملحي للأنف والعين وصحح هبوط سكر الدم (64 mg/dL) فوراً.',
+          steps: [
+            {
+              id: 'step1',
+              title: '1. تطهير غرفة معادلة الضغط بفلتر HEPA وغسل الأنف والعين بمحلول ملحي معقم',
+              detail: 'تأكد من عمل نظام شفط الغبار السلبي في منفذ البدلة Suitport، واغسل الممرات الأنفية وملتحمة العين بـ 100 مل محلول ملحي متساوي التوتر لإزالة شظايا السيليكات الزجاجية الكاشطة.',
+              done: false
+            },
+            {
+              id: 'step2',
+              title: '2. فحص وظائف التنفس SpO2 بقميص Bio-Monitor وفحص الدوبلر لفقاعات تخفيف الضغط',
+              detail: 'راجع قراءة تشبع الأكسجين (93%) وحجم التنفس على تطبيق CSA Bio-Monitor؛ وضع مسبار الدوبلر الصوتي فوق منطقة القلب لاستبعاد فقاعات النيتروجين الوريدية (مرض تخفيف الضغط DCS) بعد خفض ضغط بدلة الفضاء.',
+              done: false
+            },
+            {
+              id: 'step3',
+              title: '3. قياس سكر الدم الشعري وتطبيق قاعدة (15-15) لتصحيح هبوط الجلوكوز',
+              detail: 'تأكد من قراءة الجلوكوز (64 mg/dL) عبر جهاز القياس الفوري؛ تناول عبوة جل الجلوكوز سريع الامتصاص (15 جم) مع محلول الإماهة والأملاح وأعد القياس بعد 15 دقيقة.',
+              done: false
+            },
+            {
+              id: 'step4',
+              title: '4. تعديل حمل تمارين المقاومة في جاذبية 1/6G ومزامنة سجل EVA الطبي',
+              detail: 'خفّض حمل تمارين المقاومة المسائية بنسبة 30% لتجنب الإجهاد العضلي الحاد أو الإغماء الانتصابي بعد الـ EVA، وأرسل بيانات القميص الذكي Bio-Monitor إلى الفريق الطبي الأرضي.',
+              done: false
+            }
+          ]
+        },
+        en: {
+          badge: 'Scenario 3 • 1/6G Lunar Surface Base',
+          environment: '1/6G Lunar South Pole Habitat & Pressurized Rover',
+          latency: '2.6s Deep Space Network Lunar Relay',
+          emergencyTitle: 'Protocol: Post-EVA Lunar Regolith Inhalation, Mild Hypoxia & Exertional Hypoglycemia',
+          emergencySub: 'Following a 6-hour Lunar South Pole suit EVA, electrostatic sharp silicate regolith dust (<2 um) triggers airway irritation (SpO2 93%) alongside caloric deficit hypoglycemia (64 mg/dL).',
+          drugName: 'Oral Glucose Gel (15g Fast-Acting) + Inhaled Albuterol Bronchodilator & Saline Lavage',
+          drugRationale: 'In 1/6G partial gravity, ultrafine lunar regolith remains suspended longer in bronchial airways. Deliver 2 puffs bronchodilator via spacer + nasal saline lavage and correct 64 mg/dL blood glucose immediately.',
+          steps: [
+            {
+              id: 'step1',
+              title: '1. Suitlock HEPA Purge & Nasal/Ocular Isotonic Saline Lavage',
+              detail: 'Verify suitport negative-pressure dust containment, flush nasal passages and conjunctiva with 100 mL sterile isotonic saline to remove abrasive silicate particles.',
+              done: false
+            },
+            {
+              id: 'step2',
+              title: '2. CSA Bio-Monitor Spirometry, SpO2 & Precordial Doppler Bubble Check',
+              detail: 'Inspect continuous SpO2 (93%) and breathing volume on the Bio-Monitor app; place ultrasound Doppler over precordium to rule out Decompression Sickness (DCS) venous gas emboli.',
+              done: false
+            },
+            {
+              id: 'step3',
+              title: '3. Fingerstick Capillary Glucose Check & 15-15 Hypoglycemia Correction',
+              detail: 'Confirm blood glucose (64 mg/dL) via point-of-care glucometer; administer 15g rapid-absorption oral glucose pouch + electrolyte hydration and re-test in 15 minutes.',
+              done: false
+            },
+            {
+              id: 'step4',
+              title: '4. Recalibrate 1/6G Resistance Exercise & Sync EVA Biomedical Log',
+              detail: 'Downgrade evening resistance exercise load by 30% to prevent post-EVA rhabdomyolysis or syncope, and transmit post-EVA Bio-Monitor dataset to Earth Mission Control.',
+              done: false
+            }
+          ]
+        },
+        defaultOrgan: 'pulmonary',
+        metrics: {
+          hr: 112,
+          sysBP: 136,
+          diaBP: 88,
+          glucose: 64,
+          spo2: 93,
+          temp: 37.6,
+          co2: 1.9,
+          iop: 15,
+          sleep: 6.0,
+          mood: 7,
+          radiation: 0.68
+        },
+        hazardRadar: [66, 65, 58, 62, 86],
+        baseDoseMgPerKg: 0.20,
+        pkAdjustmentFactor: 0.94
+      }
+    };
+
+    const ORGAN_KNOWLEDGE = {
+      cardio: {
+        ar: {
+          title: 'الجهاز القلبي الوعائي والدورة الدموية',
+          summary: 'مراقبة مستمرة لتخطيط القلب ثلاثي الأقطاب ECG وتقلب معدل النبض وضغط الدم عبر القميص الذكي CSA Bio-Monitor مع سونار الصدر.',
+          hardware: 'قميص CSA Bio-Monitor + سونار POCUS',
+          hazard: 'مخاطر HRP: تغير الجاذبية + الإشعاع الفضائي',
+          standard: 'NASA-STD-3001 V1 & OSDR OSD-575',
+          howToMeasure: '1) تأكد من إحكام أربطة القميص الذكي CSA Bio-Monitor حول الصدر وترطيب الأقطاب المعدنية المدمجة بقطرتي ماء للحصول على إشارة واضحة. 2) افتح تطبيق الجهاز اللوحي للتأكد من انتظام موجة QRS في الاتجاه الثاني Lead-II. 3) عند الشعور بألم في الصدر، ضع جل الموجات فوق الصوتية عند الحيز الوربي الرابع بجانب القص لتصوير انقباض القلب خلال 10 ثوانٍ.',
+          whyItMatters: 'يؤدي انعدام الجاذبية إلى اندفاع 1.5 إلى 2.0 لتر من السوائل نحو الرأس والصدر خلال 24 ساعة، مما يقلص حجم البلازما بنسبة 10–15%، بينما يسرّع الإشعاع الفضائي التهاب بطانة الأوعية الدموية (المرصود في لوحات السيتوكينات بدراسة NASA OSDR OSD-575) وركود الدم الوريدي.',
+          whatToDo: 'إذا تجاوز النبض 105 نبضة/دقيقة وقت الراحة أو انخفض الضغط الانقباضي عن 95 mmHg: ثبّت رائد الفضاء على سطح مستوٍ، وابدأ إعطاء أكسجين 100% إذا قل SpO2 عن 94%، وأعطِ 250 مل محلول ملحي وريدي، ونفّذ بروتوكول طوارئ ألم الصدر من 4 خطوات.'
+        },
+        en: {
+          title: 'Cardiovascular & Hemodynamic System',
+          summary: 'Continuous 3-lead ECG, heart rate variability, and cuffless blood pressure via CSA Bio-Monitor Smart Shirt + thoracic ultrasound.',
+          hardware: 'CSA Bio-Monitor Smart Shirt + POCUS Ultrasound',
+          hazard: 'HRP Hazards: Altered Gravity + Space Radiation',
+          standard: 'NASA-STD-3001 V1 & OSDR OSD-575',
+          howToMeasure: '1) Ensure the CSA Bio-Monitor smart shirt straps are snug against the thorax and moisten the integrated metal textile electrodes with 2 drops of water. 2) Open the Bio-Monitor tablet app to verify a clean Lead-II QRS waveform. 3) For acute chest pain, apply ultrasound gel to the 4th intercostal parasternal window for guided 10-second cardiac contractility capture.',
+          whyItMatters: 'Microgravity causes a 1.5–2.0 L cephalad fluid shift within 24 hours, shrinking plasma volume by 10–15% while space radiation accelerates endothelial inflammation (tracked in OSDR OSD-575 cytokine panels) and jugular venous stasis.',
+          whatToDo: 'If HR exceeds 105 bpm at rest or Systolic BP drops below 95 mmHg: restrain crewmember on a flat surface, initiate 100% O2 if SpO2 < 94%, administer 250 mL isotonic fluid bolus, and execute the 4-step Chest-Pain Collapse Triage protocol.'
+        }
+      },
+      neuro: {
+        ar: {
+          title: 'الجهاز العصبي البصري وضغط الجمجمة (SANS)',
+          summary: 'يرصد متلازمة العين العصبية المرتبطة بالرحلات الفضائية (وذمة القرص البصري، تفلطح مقلة العين، طيات المشيمية، وتغير حدة الإبصار).',
+          hardware: 'مقياس ضغط العين + تصوير الشبكية OCT + Acuity Pro',
+          hazard: 'مخاطر HRP: اندفاع السوائل للرأس (0G) + ارتفاع CO2',
+          standard: 'OCHMO-MTB-001 SANS & NASA-STD-3001',
+          howToMeasure: '1) استرح في وضعية الجلوس لمدة 5 دقائق. 2) قرّب مقياس ضغط العين الارتدادي المحمول لمسافة 4–8 مم عمودياً على مركز القرنية (حتى يضيء المؤشر الأخضر) وسجّل 3 قراءات لكل عين. 3) أكمل اختبار حدة الإبصار القريب والبعيد وشبكة Amsler على الجهاز اللوحي خلال 3 دقائق.',
+          whyItMatters: 'في غياب الجاذبية التي تسحب السوائل للأسفل، يتجمع الدم الوريدي والسائل الدماغي الشوكي في الرأس والمشيمية، مما يضغط على غمد العصب البصري (وثيقة OCHMO-MTB-001). ويزداد هذا الخطر مع ارتفاع غاز ثاني أكسيد الكربون في المقصورة (>3.0 mmHg).',
+          whatToDo: 'إذا ارتفع ضغط العين IOP فوق 21 mmHg أو تشوشت الرؤية القريبة (+0.50 D إلى +1.50 D): تأكد فوراً من أن ضغط ppCO2 في المقصورة أقل من 3.0 mmHg، وارتدِ نظارات التصحيح المسبقة Space Anticipation Glasses، ونفّذ جلسة ضغط سلبي للجزء السفلي (LBNP) لمدة 45 دقيقة.'
+        },
+        en: {
+          title: 'Neuro-Ocular & Intracranial System (SANS)',
+          summary: 'Monitors Spaceflight-Associated Neuro-Ocular Syndrome (optic disc edema, globe flattening, choroidal folds, and visual acuity shift).',
+          hardware: 'Rebound Tonometer + OCT + Acuity Pro',
+          hazard: 'HRP Hazard: Gravity Fields (Cephalad Shift) + High CO2',
+          standard: 'OCHMO-MTB-001 SANS & NASA-STD-3001',
+          howToMeasure: '1) Rest in upright/seated posture for 5 minutes. 2) Hold the handheld rebound tonometer 4–8 mm from the central cornea and capture 3 IOP readings per eye. 3) Complete the 3-minute Acuity Pro distance/near chart and Amsler grid check on the crew tablet.',
+          whyItMatters: 'Without gravitational hydrostatic gradients, venous blood pools in the head and choroid, swelling the optic nerve sheath (OCHMO-MTB-001). High cabin CO2 (>3.0 mmHg) compounds this by dilating cerebral blood vessels.',
+          whatToDo: 'If IOP > 21 mmHg or near vision blurs (+0.50 D to +1.50 D shift): verify cabin ppCO2 is below 3.0 mmHg, put on adjustable Space Anticipation Glasses, and schedule a 45-minute Lower-Body Negative Pressure (LBNP) countermeasure session.'
+        }
+      },
+      pulmonary: {
+        ar: {
+          title: 'الجهاز التنفسي وجودة هواء المقصورة',
+          summary: 'يتتبع معدل وحجم التنفس، وتشبع الأكسجين SpO2، وضغط غاز ثاني أكسيد الكربون ppCO2، وتأثير غبار القمر والمريخ.',
+          hardware: 'مستشعر التنفس CSA Bio-Monitor + حساس OSDR EDA CO2',
+          hazard: 'مخاطر HRP: البيئة المغلقة المعادية وغبار الكواكب',
+          standard: 'OCHMO-TB-004 (ppCO2 ≤ 3.0 mmHg)',
+          howToMeasure: '1) راجع قراءة حساس الأكسجين الضوئي SpO2 في عصابة الرأس وحزام الصدر لقميص CSA Bio-Monitor. 2) قارن قراءة حساس غاز CO2 الجداري عبر واجهة بيانات البيئة NASA OSDR EDA. 3) بعد العودة من السير الفضائي EVA، انفخ 3 مرات في مقياس تدفق الزفير المحمول Spirometer.',
+          whyItMatters: 'وفق وثيقة NASA OCHMO-TB-004، يلزم معيار NASA-STD-3001 [V2 6004] بألا يتجاوز متوسط ppCO2 خلال ساعة 3.0 mmHg لأن غياب الحمل الحراري في 0G يحبس غاز الزفير حول وجه الرائد ويسبب الصداع وتراجع التركيز. وعلى القمر والمريخ، تسبب ذرات الغبار السيليكاتية التهاباً حاداً بالشعب الهوائية.',
+          whatToDo: 'إذا تجاوز ppCO2 حد 3.0 mmHg: شغّل مروحة تدفق الهواء الشخصية فوراً وافحص فلاتر تنقية الكربون CDRA. وإذا انخفض SpO2 بعد السير الفضائي عن 94% مع سعال: اغسل الأنف والعين بمحلول ملحي معقم، واستخدم بخاخ موسع الشعب، وافحص القلب بالدوبلر لاستبعاد فقاعات تخفيف الضغط.'
+        },
+        en: {
+          title: 'Pulmonary, Airway & Cabin Atmosphere',
+          summary: 'Tracks respiratory rate, tidal volume, SpO2 oxygenation, cabin ppCO2 hypercapnia, and planetary dust inhalation.',
+          hardware: 'CSA Bio-Monitor Plethysmography + OSDR EDA CO2',
+          hazard: 'HRP Hazard: Hostile Closed Environment & Planetary Dust',
+          standard: 'OCHMO-TB-004 (ppCO2 ≤ 3.0 mmHg)',
+          howToMeasure: '1) Check the CSA Bio-Monitor headband optical SpO2 sensor and thoracic respiratory inductance band. 2) Cross-check habitat wall ppCO2 via the NASA OSDR Environmental Data App (EDA) feed. 3) Post-EVA, perform a 3-breath peak expiratory flow maneuver into the handheld spirometer.',
+          whyItMatters: 'Per OCHMO-TB-004, NASA-STD-3001 [V2 6004] limits average 1-hour cabin ppCO2 to ≤3.0 mmHg because microgravity lacks natural convection, causing CO2 headaches and cognitive impairment. On the Moon/Mars, electrostatically charged silicate dust irritates small airways.',
+          whatToDo: 'If ppCO2 > 3.0 mmHg: activate personal airflow fan immediately and inspect CDRA scrubber beds. If post-EVA SpO2 < 94% with cough: perform isotonic nasal/ocular lavage, administer 2 puffs bronchodilator, and screen for decompression venous gas emboli.'
+        }
+      },
+      metabolic: {
+        ar: {
+          title: 'الأيض وسكر الدم والمؤشرات الدموية والمناعية',
+          summary: 'يقيس سكر الدم الشعري (mg/dL)، ومقاومة الإنسولين، وفقر الدم الفضائي (RBC/Hb)، والسيتوكينات المناعية.',
+          hardware: 'جهاز التحليل الحيوي الكندي CSA Bio-Analyzer (60 ميكرولتر)',
+          hazard: 'مخاطر HRP: الإشعاع + الجاذبية الصغرى + التغذية',
+          standard: 'NASA OSDR OSD-575 & OSD-569 (Inspiration4)',
+          howToMeasure: '1) دفّئ طرف إصبع البنصر لمدة 30 ثانية، وامسحه بمسحة كحولية ثم اثقبه جانبياً بوخزة صغيرة. 2) ضع 2–3 قطرات من الدم الشعري في خرطوشة جهاز CSA Bio-Analyzer (بحجم جهاز ألعاب الفيديو). 3) يعطي الجهاز تحليلاً كمياً شاملاً لخلايا الدم والمؤشرات الحيوية خلال ساعتين إلى 3 ساعات (أو قراءة جلوكوز فورية خلال 5 ثوانٍ).',
+          whyItMatters: 'تسبب رحلات الفضاء مقاومة للأنسولين وتصلباً بالشرايين (كما وثقت تجارب CSA Vascular Calcium ودراسة OSDR OSD-575)، بالإضافة إلى انحلال نحو 10% من كرات الدم الحمراء ("فقر الدم الفضائي" في دراسة OSD-569) وتغير إنزيمات الكبد المسؤولة عن استقلاب الأدوية.',
+          whatToDo: 'إذا انخفض سكر الدم عن 70 mg/dL (هبوط السكر بعد مجهود EVA): تناول 15 جم من جل الجلوكوز سريع الامتصاص وأعد الفحص بعد 15 دقيقة. وإذا تجاوز سكر الصيام 125 mg/dL: زد تمرين الدراجة الهوائية بمقدار 20 دقيقة وقلل الحصة الكربوهيدراتية البسيطة.'
+        },
+        en: {
+          title: 'Metabolic, Hepatic & Hematological Panel',
+          summary: 'Tracks capillary blood glucose (mg/dL), insulin sensitivity, spaceflight anemia (RBC/Hb), and immune cytokines.',
+          hardware: 'CSA Bio-Analyzer Console (60 uL Capillary Drop)',
+          hazard: 'HRP Hazards: Radiation + Altered Gravity + Nutrition',
+          standard: 'NASA OSDR OSD-575 & OSD-569 (Inspiration4)',
+          howToMeasure: '1) Warm the ring fingertip for 30 seconds, clean with alcohol swab, and lance laterally. 2) Transfer 2–3 drops of capillary blood into the CSA Bio-Analyzer disposable cartridge. 3) Automated microfluidic cytometry and chemistry return quantitative results within 2–3 hours (or 5 seconds via rapid glucometer strip).',
+          whyItMatters: 'Spaceflight induces subclinical insulin resistance (documented in CSA Vascular Calcium and OSDR OSD-575), hemolysis of ~10% red blood cells ("space anemia" in OSD-569), and hepatic enzyme shifts that alter medication metabolism.',
+          whatToDo: 'If Blood Glucose < 70 mg/dL (post-EVA hypoglycemia): consume 15g fast-acting glucose gel and re-check in 15 min. If fasting glucose > 125 mg/dL: increase aerobic cycle ergometer duration by 20 min and reduce refined carbohydrate ration.'
+        }
+      },
+      musculoskeletal: {
+        ar: {
+          title: 'الجهاز العضلي الهيكلي وكثافة المعادن بالعظام',
+          summary: 'يتابع فقدان الكثافة العظمية (1–1.5% شهرياً في 0G)، وضمور عضلات القوام، وحمل تمارين المقاومة اليومية ARED.',
+          hardware: 'مقياس تسارع CSA Bio-Monitor + تحليل كالسيوم البول Bio-Analyzer',
+          hazard: 'مخاطر HRP: غياب الحمل الميكانيكي للجاذبية (0G / 1/6G)',
+          standard: 'NASA HRP Countermeasures & EPIC Console',
+          howToMeasure: '1) ارتدِ قميص CSA Bio-Monitor وحساس التسارع ثلاثي المحاور على الكاحل أثناء التمارين اليومية لتسجيل قوى رد الفعل ومعدل تعافي النبض. 2) أسبوعياً، ضع قطرة من بول الصباح في جهاز CSA Bio-Analyzer لقياس نسبة الكالسيوم/الكرياتينين ومؤشر ارتشاف العظم NTX.',
+          whyItMatters: 'تفقد العظام الحاملة للوزن (عنق الفخذ والفقرات القطنية) من 1.0% إلى 1.5% من كثافتها المعدنية شهرياً في انعدام الجاذبية، مما يرفع خطر الكسور عند الهبوط على القمر أو المريخ ويزيد تركيز الكالسيوم في البول فيرفع خطر حصوات الكلى.',
+          whatToDo: 'التزم بإتمام 90 دقيقة يومياً من تمارين المقاومة على جهاز ARED (القرفصاء، الرفعة الميتة، تقوية السمانة) + 30 دقيقة مشي/دراجة، مع تناول 1000 وحدة دولية من فيتامين D3 يومياً وشرب أكثر من 2.5 لتر ماء لمنع تكون حصوات الكلى.'
+        },
+        en: {
+          title: 'Musculoskeletal & Bone Mineral Countermeasures',
+          summary: 'Monitors bone mineral turnover (1–1.5% monthly loss in 0G), postural muscle atrophy, and ARED resistance exercise load.',
+          hardware: 'CSA Bio-Monitor Accelerometer + Urine Ca2+ Bio-Analyzer',
+          hazard: 'HRP Hazard: Gravity Fields (0G / 1/6G Unloading)',
+          standard: 'NASA HRP Countermeasures & EPIC Console',
+          howToMeasure: '1) Wear the CSA Bio-Monitor shirt and ankle triaxial accelerometers during daily exercise to log peak ground reaction forces and heart-rate recovery. 2) Weekly, test morning urine calcium/creatinine ratio and N-telopeptide (NTX) in the CSA Bio-Analyzer.',
+          whyItMatters: 'Unloaded weight-bearing bones (femoral neck, lumbar spine) lose 1.0–1.5% mineral density per month in microgravity, elevating fracture risk upon Moon/Mars landing and increasing renal calcium oxalate kidney stone risk.',
+          whatToDo: 'Ensure daily completion of 90-minute ARED resistive exercise + 30-minute treadmill/cycle session, maintain 1,000 IU/day Vitamin D3 supplementation, and drink >2.5 L/day water to prevent renal stones.'
+        }
+      },
+      behavioral: {
+        ar: {
+          title: 'الصحة السلوكية وجودة النوم والساعة البيولوجية',
+          summary: 'يراقب بنية النوم العميق، واضطراب الساعة البيولوجية (16 شروقاً للشمس يومياً في المدار)، وسرعة الاستجابة الذهنية، والمزاج.',
+          hardware: 'عصابة رأس CSA Bio-Monitor + اختبار اليقظة الذهنية PVT',
+          hazard: 'مخاطر HRP: العزلة والاحتجاز + البعد عن الأرض',
+          standard: 'NASA Spaceflight Standard Measures (SSM)',
+          howToMeasure: '1) ارتدِ عصابة الرأس الخاصة بنظام CSA Bio-Monitor أثناء النوم لتسجيل كفاءة النوم العميق ومعدل نبض القلب الليلي. 2) فور الاستيقاظ، سجّل تقييم المزاج الذاتي (من 1 إلى 10) وأكمل اختبار اليقظة الحركية النفسية (PVT) لمدة 3 دقائق على الجهاز اللوحي.',
+          whyItMatters: 'يؤدي الاحتجاز الطويل في مساحة ضيقة، وتغير دورات الضوء والظلام، وتأخر الاتصال بالأرض (حتى 20 دقيقة في مهمات المريخ) إلى تقليص النوم لأقل من 6 ساعات يومياً، مما يضاعف احتمالات الخطأ البشري أثناء السير الفضائي EVA أو الالتحام.',
+          whatToDo: 'إذا قلّ النوم عن 6.0 ساعات أو هبط مؤشر المزاج إلى ≤4/10: حوّل إضاءة المقصورة LED إلى الطيف الخالي من الضوء الأزرق (تثبيط طول موجي 480 نانومتر) قبل النوم بساعتين، ونفّذ جلسة استرخاء تنفسي موجهة لمدة 20 دقيقة، وأعد جدولة المهام عالية الخطورة.'
+        },
+        en: {
+          title: 'Behavioral Health, Sleep & Circadian Readiness',
+          summary: 'Monitors sleep architecture, circadian misalignment (16 orbital sunrises/day), cognitive reaction speed, and crew mood.',
+          hardware: 'CSA Bio-Monitor Actigraphy + 3-Min Psychomotor Vigilance Test',
+          hazard: 'HRP Hazards: Isolation & Confinement + Distance from Earth',
+          standard: 'NASA Spaceflight Standard Measures (SSM)',
+          howToMeasure: '1) Wear the CSA Bio-Monitor headband during sleep to log sleep latency, REM/deep-sleep efficiency, and nocturnal heart rate. 2) Upon waking, log subjective Mood (1–10 scale) and complete the 3-minute tablet Psychomotor Vigilance Test (PVT).',
+          whyItMatters: 'Long-duration confinement, 90-minute LEO light/dark cycles or deep-space monotony, and 20-minute communication delays degrade sleep below 6 hours/night, increasing operational human error during critical EVA or docking maneuvers.',
+          whatToDo: 'If sleep < 6.0 hours or Mood ≤ 4/10: switch habitat solid-state lighting to blue-depleted (480 nm suppressed) evening spectrum 2 hours before sleep, run a 20-minute guided cognitive decompression session, and rotate high-cognitive-load tasks.'
+        }
+      }
+    };
+
+    const ROUTINE_TASKS_DATA = [
+      {
+        id: 'rt1',
+        time: '07:00 UTC',
+        arTitle: 'مزامنة القميص الذكي CSA Bio-Monitor وفحص تخطيط القلب الصباحي Lead-II',
+        enTitle: 'Morning CSA Bio-Monitor Strap & Lead-II ECG Baseline Sync',
+        env: 'جميع البيئات (0G / 1/6G)',
+        xp: 30,
+        done: true
+      },
+      {
+        id: 'rt2',
+        time: '08:30 UTC',
+        arTitle: 'قياس سكر الدم الشعري (mg/dL) وفحص الكثافة النوعية للبول (مستوى الإماهة)',
+        enTitle: 'Capillary Blood Sugar (mg/dL) & Hydration Urine Specific Gravity Check',
+        env: '0G / 1/6G',
+        xp: 35,
+        done: true
+      },
+      {
+        id: 'rt3',
+        time: '11:00 UTC',
+        arTitle: 'تمرين المقاومة ARED لمدة 90 دقيقة + الدراجة الهوائية لحماية العظام والقلب',
+        enTitle: '90-Min ARED Resistive + Cycle Ergometer Bone/Cardio Countermeasure',
+        env: '0G / 1/6G',
+        xp: 50,
+        done: false
+      },
+      {
+        id: 'rt4',
+        time: '14:00 UTC',
+        arTitle: 'مراجعة ضغط ثاني أكسيد الكربون ppCO2 (≤3.0 mmHg) وجرعة إشعاع RadLab',
+        enTitle: 'Cabin ppCO2 (≤3.0 mmHg) & RadLab Dosimetry Threshold Audit',
+        env: 'جميع البيئات',
+        xp: 25,
+        done: false
+      },
+      {
+        id: 'rt5',
+        time: '17:30 UTC',
+        arTitle: 'قياس ضغط العين الارتدادي (IOP) وفحص الشبكة البصرية Acuity Pro للوقاية من SANS',
+        enTitle: 'SANS Rebound Tonometry (IOP) & Acuity Pro Visual Grid Check',
+        env: '0G مركبة / محطة',
+        xp: 40,
+        done: false
+      },
+      {
+        id: 'rt6',
+        time: '21:00 UTC',
+        arTitle: 'تعديل إضاءة الساعة البيولوجية وتجهيز عصابة النوم Bio-Monitor وتسجيل المزاج (1–10)',
+        enTitle: 'Circadian Blue-Light Shift, Sleep Actigraphy Prep & Mood Log (1–10)',
+        env: 'جميع البيئات',
+        xp: 30,
+        done: false
+      }
+    ];
+
+    // =========================================================================
+    // APPLICATION STATE (DEFAULT: ARABIC RTL)
+    // =========================================================================
+    let state = {
+      lang: 'ar',
+      activeScenario: 'mars_collapse',
+      activeView: 'dashboard',
+      activeOrgan: 'cardio',
+      activeChartMode: 'cardio',
+      crewId: 'C001',
+      xp: 340,
+      metrics: { ...SCENARIOS.mars_collapse.metrics },
+      emergencySteps: JSON.parse(JSON.stringify(SCENARIOS.mars_collapse.ar.steps)),
+      routineTasks: JSON.parse(JSON.stringify(ROUTINE_TASKS_DATA)),
+      symptomLogs: [
+        '[14:12 UTC] إنذار تلقائي: رصد قميص Bio-Monitor تسارع نبض جيبي حاد (134 bpm) مع هبوط ضغط الدم (92/58 mmHg) لدى الرائد C001.',
+        '[14:05 UTC] قياس RadLab الإشعاعي: ارتفاع التدفق الإشعاعي الشمسي إلى 1.85 mSv/day.'
+      ]
+    };
+
+    let longitudinalChartInstance = null;
+    let hazardRadarChartInstance = null;
+
+    // =========================================================================
+    // STATUS EVALUATION HELPERS (COLOR CODING PER NASA-STD-3001)
+    // =========================================================================
+    function evaluateMetricStatus(key, val) {
+      const isAr = state.lang === 'ar';
+      switch (key) {
+        case 'hr':
+          if (val > 115 || val < 45) return { level: 'CRITICAL', arLevel: 'حرج', color: 'red', label: isAr ? 'تسارع نبض / عدم استقرار' : 'Tachycardia / Instability' };
+          if (val > 95 || val < 52) return { level: 'CAUTION', arLevel: 'تنبيه', color: 'amber', label: isAr ? 'إجهاد قلبي مرتفع' : 'Elevated Exertion/Stress' };
+          return { level: 'NOMINAL', arLevel: 'طبيعي', color: 'emerald', label: isAr ? 'نبض متكيف مع 0G' : '0G Adapted Sinus' };
+        case 'sysBP':
+          if (val < 95 || val > 145) return { level: 'CRITICAL', arLevel: 'حرج', color: 'red', label: val < 95 ? (isAr ? 'هبوط ضغط صدمي' : 'Hypotensive Shock') : (isAr ? 'ارتفاع ضغط حاد' : 'Hypertensive Crisis') };
+          if (val < 102 || val > 130) return { level: 'CAUTION', arLevel: 'تنبيه', color: 'amber', label: isAr ? 'إزاحة سوائل الفضاء' : 'Fluid Shift Drift' };
+          return { level: 'NOMINAL', arLevel: 'طبيعي', color: 'emerald', label: isAr ? 'تروية دموية مستقرة' : 'Nominal Perfusion' };
+        case 'glucose':
+          if (val < 68 || val > 140) return { level: 'CRITICAL', arLevel: 'حرج', color: 'red', label: val < 68 ? (isAr ? 'هبوط سكر الدم' : 'Hypoglycemia') : (isAr ? 'ارتفاع سكر إجهادي' : 'Stress Hyperglycemia') };
+          if (val < 75 || val > 115) return { level: 'CAUTION', arLevel: 'تنبيه', color: 'amber', label: isAr ? 'مقاومة أنسولين فضائية' : 'Insulin Resistance Drift' };
+          return { level: 'NOMINAL', arLevel: 'طبيعي', color: 'emerald', label: isAr ? 'مستوى جلوكوز متوازن' : 'Fasting Euglycemia' };
+        case 'spo2':
+          if (val < 92) return { level: 'CRITICAL', arLevel: 'حرج', color: 'red', label: isAr ? 'نقص أكسجة الدم' : 'Hypoxemia Alert' };
+          if (val < 95) return { level: 'CAUTION', arLevel: 'تنبيه', color: 'amber', label: isAr ? 'انخفاض طفيف بالأكسجين' : 'Mild Desaturation' };
+          return { level: 'NOMINAL', arLevel: 'طبيعي', color: 'emerald', label: isAr ? 'تشبع أكسجين مثالي' : 'Optimal Oxygenation' };
+        case 'temp':
+          if (val >= 37.8 || val <= 35.8) return { level: 'CRITICAL', arLevel: 'حرج', color: 'red', label: isAr ? 'حمى / استجابة التهابية' : 'Febrile / Stress Response' };
+          if (val >= 37.4) return { level: 'CAUTION', arLevel: 'تنبيه', color: 'amber', label: isAr ? 'ارتفاع طفيف بالحرارة' : 'Core Warm Drift' };
+          return { level: 'NOMINAL', arLevel: 'طبيعي', color: 'emerald', label: isAr ? 'حرارة جسم طبيعية' : 'Normothermia' };
+        case 'co2':
+          if (val > 3.8) return { level: 'CRITICAL', arLevel: 'حرج', color: 'red', label: isAr ? 'تجاوز خطير لمعيار NASA' : 'Exceeds NASA-STD-3001' };
+          if (val > 3.0) return { level: 'CAUTION', arLevel: 'تنبيه', color: 'amber', label: isAr ? 'أعلى من حد 3.0 mmHg' : 'Above 3.0 mmHg Limit' };
+          return { level: 'NOMINAL', arLevel: 'طبيعي', color: 'emerald', label: isAr ? 'ضمن الحد الآمن ≤3.0' : 'Within ≤3.0 mmHg' };
+        case 'iop':
+          if (val >= 22) return { level: 'CRITICAL', arLevel: 'حرج', color: 'red', label: isAr ? 'ارتفاع ضغط العين SANS' : 'SANS Ocular Hypertension' };
+          if (val >= 19) return { level: 'CAUTION', arLevel: 'تنبيه', color: 'amber', label: isAr ? 'احتقان سوائل الرأس' : 'Cephalad IOP Elevation' };
+          return { level: 'NOMINAL', arLevel: 'طبيعي', color: 'emerald', label: isAr ? 'ضغط عين طبيعي' : 'Normal Globe Pressure' };
+        case 'sleep':
+          if (val < 5.0) return { level: 'CRITICAL', arLevel: 'حرج', color: 'red', label: isAr ? 'حرمان نوم حاد' : 'Acute Sleep Deficit' };
+          if (val < 6.5) return { level: 'CAUTION', arLevel: 'تنبيه', color: 'amber', label: isAr ? 'اضطراب الساعة البيولوجية' : 'Circadian Misalignment' };
+          return { level: 'NOMINAL', arLevel: 'طبيعي', color: 'emerald', label: isAr ? 'دورة نوم كافية' : 'Restorative Cycle' };
+        default:
+          return { level: 'NOMINAL', arLevel: 'طبيعي', color: 'emerald', label: isAr ? 'طبيعي' : 'Nominal' };
+      }
+    }
+
+    function getOrganStatus(organKey) {
+      const m = state.metrics;
+      if (organKey === 'cardio') {
+        const s1 = evaluateMetricStatus('hr', m.hr);
+        const s2 = evaluateMetricStatus('sysBP', m.sysBP);
+        if (s1.level === 'CRITICAL' || s2.level === 'CRITICAL') return 'CRITICAL';
+        if (s1.level === 'CAUTION' || s2.level === 'CAUTION') return 'CAUTION';
+        return 'NOMINAL';
+      }
+      if (organKey === 'neuro') {
+        const s1 = evaluateMetricStatus('iop', m.iop);
+        const s2 = evaluateMetricStatus('co2', m.co2);
+        if (s1.level === 'CRITICAL' || s2.level === 'CRITICAL') return 'CRITICAL';
+        if (s1.level === 'CAUTION' || s2.level === 'CAUTION') return 'CAUTION';
+        return 'NOMINAL';
+      }
+      if (organKey === 'pulmonary') {
+        const s1 = evaluateMetricStatus('spo2', m.spo2);
+        const s2 = evaluateMetricStatus('co2', m.co2);
+        if (s1.level === 'CRITICAL' || s2.level === 'CRITICAL') return 'CRITICAL';
+        if (s1.level === 'CAUTION' || s2.level === 'CAUTION') return 'CAUTION';
+        return 'NOMINAL';
+      }
+      if (organKey === 'metabolic') {
+        const s1 = evaluateMetricStatus('glucose', m.glucose);
+        const s2 = evaluateMetricStatus('temp', m.temp);
+        if (s1.level === 'CRITICAL' || s2.level === 'CRITICAL') return 'CRITICAL';
+        if (s1.level === 'CAUTION' || s2.level === 'CAUTION') return 'CAUTION';
+        return 'NOMINAL';
+      }
+      if (organKey === 'behavioral') {
+        return evaluateMetricStatus('sleep', m.sleep).level;
+      }
+      return 'NOMINAL';
+    }
+
+    // =========================================================================
+    // UI RENDERING FUNCTIONS
+    // =========================================================================
+    function showToast(msg) {
+      const toast = document.getElementById('toastBanner');
+      toast.textContent = msg;
+      toast.classList.remove('hidden');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 3600);
+    }
+
+    function applyLanguageStaticStrings() {
+      const isAr = state.lang === 'ar';
+      document.documentElement.lang = isAr ? 'ar' : 'en';
+      document.documentElement.dir = isAr ? 'rtl' : 'ltr';
+
+      document.getElementById('brandSubtitle').innerHTML = isAr
+        ? '<strong class="text-dmIce">Digital Minds</strong> <span class="text-dmCyan font-mono">THINK • BUILD • IMPACT</span> — منصة المراقبة الصحية الذاتية وفرز الطوارئ لرواد الفضاء'
+        : '<strong class="text-dmIce">Digital Minds</strong> <span class="text-dmCyan font-mono">THINK • BUILD • IMPACT</span> — Autonomous Astronaut Health &amp; Triage Platform';
+
+      document.getElementById('lblEnvRegime').textContent = isAr ? 'بيئة المهمة والجاذبية' : 'Environment Regime';
+      document.getElementById('lblLatency').textContent = isAr ? 'تأخر الاتصال بالأرض (اتجاه واحد)' : 'Earth One-Way Delay';
+      document.getElementById('voiceCoachLabel').textContent = isAr ? 'قراءة الإرشادات صوتياً' : 'Read Guidance Aloud';
+      document.getElementById('sec1Heading').innerHTML = isAr
+        ? '<span class="text-dmCyan font-mono">01 //</span> محاكي السيناريوهات الثلاثة التفاعلي (متوافق مع متطلبات التحدي الرسمية)'
+        : '<span class="text-dmCyan font-mono">01 //</span> Interactive 3-Scenario Mission Simulator (Aligned with Official Challenge Description)';
+      document.getElementById('sec1Sub').innerHTML = isAr
+        ? 'بدّل بين سيناريوهات الفضاء الثلاثة لإعادة معايرة المؤشرات الحيوية (<code class="text-dmCyan">0G مركبة المريخ</code>، <code class="text-dmCyan">0G محطة مدارية</code>، <code class="text-dmCyan">1/6G قاعدة القمر</code>) وبيانات القميص الذكي وإرشادات الطوارئ لغير الأطباء.'
+        : 'Switch between the 3 spaceflight scenarios to recalibrate physiological baselines (<code class="text-dmCyan">0G Transit</code>, <code class="text-dmCyan">0G Space Station</code>, <code class="text-dmCyan">1/6G Lunar Surface</code>), wearable telemetry, and non-physician emergency guidance.';
+      document.getElementById('lblCrewSelect').textContent = isAr ? 'رائد الفضاء:' : 'Crew Member:';
+      document.getElementById('resetScenarioBtn').textContent = isAr ? 'إعادة ضبط السيناريو' : 'Reset Scenario';
+
+      // Scenario cards text
+      document.getElementById('sc1Badge').textContent = isAr ? 'السيناريو 1 • مركبة الفضاء العميق 0G' : 'Scenario 1 • 0G Transit';
+      document.getElementById('sc1Delay').textContent = isAr ? 'التأخير: 14 د 20 ث' : 'Delay: 14m 20s';
+      document.getElementById('sc1Title').textContent = isAr ? 'رحلة المريخ (0G): انهيار مفاجئ وألم حاد بالصدر' : 'Deep-Space Mars Transit: Acute Chest-Pain Collapse';
+      document.getElementById('sc1Desc').textContent = isAr
+        ? 'يحاكي أزمة فيديو التحدي الرسمي: في منتصف الطريق إلى المريخ أثناء عاصفة إشعاعية شمسية (1.85 mSv/day)، يصاب زميلك بألم حاد في الصدر مع هبوط ضغط الدم (92/58 mmHg) وتسارع النبض (134 bpm).'
+        : 'Simulates the official challenge video crisis: halfway to Mars during a Solar Particle Event (1.85 mSv/day), a crewmate suffers acute chest pain, hypotension (92/58 mmHg), and tachycardia (134 bpm).';
+
+      document.getElementById('sc2Badge').textContent = isAr ? 'السيناريو 2 • محطة فضائية مدارية 0G' : 'Scenario 2 • 0G Station';
+      document.getElementById('sc2Delay').textContent = isAr ? 'التأخير: 1.2 ث' : 'Delay: 1.2s';
+      document.getElementById('sc2Title').textContent = isAr ? 'المحطة المدارية: ارتفاع CO2 ومتلازمة العين العصبية SANS' : 'Orbital Station: Cabin CO2 Spike & Neuro-Ocular SANS';
+      document.getElementById('sc2Desc').textContent = isAr
+        ? 'يحاكي تشبع فلاتر الهواء وارتفاع ضغط ثاني أكسيد الكربون الجزئي ppCO2 إلى 4.2 mmHg (تجاوز حد NASA-STD-3001 البالغ 3.0 mmHg) مع اندفاع السوائل للرأس وارتفاع ضغط العين (23 mmHg).'
+        : 'Simulates a scrubber degradation pushing cabin ppCO2 to 4.2 mmHg (above NASA-STD-3001 3.0 mmHg limit) alongside cephalad fluid shift elevating intraocular pressure (23 mmHg).';
+
+      document.getElementById('sc3Badge').textContent = isAr ? 'السيناريو 3 • قاعدة سطح القمر 1/6G' : 'Scenario 3 • 1/6G Lunar Base';
+      document.getElementById('sc3Delay').textContent = isAr ? 'التأخير: 2.6 ث' : 'Delay: 2.6s';
+      document.getElementById('sc3Title').textContent = isAr ? 'قاعدة القمر والعربة الجوالة: استنشاق غبار الريجوليث وهبوط السكر' : 'Lunar Surface EVA: Regolith Inhalation & Decompression';
+      document.getElementById('sc3Desc').textContent = isAr
+        ? 'يحاكي العودة من نشاط خارج المركبة EVA في جاذبية القمر 1/6G مع تهيج الشعب الهوائية بغبار القمر السيليكاتي (SpO2 93%) وهبوط سكر الدم الإجهادي (64 mg/dL) وفحص فقاعات تخفيف الضغط.'
+        : 'Simulates post-rover EVA return at 1/6G with lunar regolith airway irritation (SpO2 93%), caloric depletion hypoglycemia (64 mg/dL), and decompression screening.';
+
+      // Tabs
+      document.getElementById('tabBtnDashboard').textContent = isAr ? '1. لوحة المؤشرات الحيوية وخريطة الجسم التفاعلية' : '1. Live Biometric & Body Map Console';
+      document.getElementById('tabBtnEmergency').textContent = isAr ? '2. طوارئ "سقوط زميل المهمة" وحاسبة الدواء الفضائية PK/PD' : '2. "Crewmate Down" Emergency Triage & PK/PD Dosing';
+      document.getElementById('tabBtnRoutine').textContent = isAr ? '3. الروتين اليومي التفاعلي (Gamification) وإدخال القياسات' : '3. Gamified Mission Routine & Manual Input Simulator';
+      document.getElementById('tabBtnResources').textContent = isAr ? '4. مستكشف مصادر وبيانات NASA ووكالات الفضاء الرسمية' : '4. Official NASA & Partner Resource Explorer';
+      document.getElementById('lblActiveOrganPrefix').textContent = isAr ? 'النظام التشريحي المحدد:' : 'Active Organ Filter:';
+
+      // Body map & coach labels
+      document.getElementById('bodyMapHeading').textContent = isAr ? 'خريطة الجسم التشريحية التفاعلية' : 'Interactive Anatomical Status Map';
+      document.getElementById('bodyMapHint').textContent = isAr ? 'اضغط على أي عضو للفحص' : 'Click Organ to Inspect';
+      document.getElementById('bodyMapDesc').textContent = isAr
+        ? 'مطابق لوصف التحدي الرسمي: اضغط على أي جزء من جسم رائد الفضاء لعرض وظيفته الفسيولوجية في الفضاء، وحالته الصحية، وطريقة القياس خطوة بخطوة.'
+        : 'Matches the official challenge prompt: click any body region to inspect its spaceflight function, current anomaly status, and non-physician measurement protocol.';
+
+      document.getElementById('svgLblNeuro').textContent = isAr ? 'العين والدماغ SANS' : 'NEURO / OCULAR';
+      document.getElementById('svgLblBehavioral').textContent = isAr ? 'النوم والمزاج' : 'SLEEP / MOOD';
+      document.getElementById('svgLblLungs').textContent = isAr ? 'الرئتان / CO2' : 'LUNGS / CO2';
+      document.getElementById('svgLblHeart').textContent = isAr ? 'القلب / ECG' : 'HEART / ECG';
+      document.getElementById('svgLblMetabolic').textContent = isAr ? 'الأيض وسكر الدم' : 'METABOLIC / BLOOD';
+      document.getElementById('svgLblBone').textContent = isAr ? 'العظام والعضلات' : 'BONE & MUSCLE';
+
+      document.getElementById('pillCardio').textContent = isAr ? 'القلب والأوعية' : 'Heart / Cardio';
+      document.getElementById('pillNeuro').textContent = isAr ? 'العين والدماغ SANS' : 'Neuro-Ocular';
+      document.getElementById('pillPulmonary').textContent = isAr ? 'الرئتان و CO2' : 'Lungs / CO2';
+      document.getElementById('pillMetabolic').textContent = isAr ? 'الدم وسكر الجلوكوز' : 'Blood / Glucose';
+      document.getElementById('pillMusculo').textContent = isAr ? 'العظام والعضلات' : 'Bone / Muscle';
+      document.getElementById('pillBehavioral').textContent = isAr ? 'النوم والحالة النفسية' : 'Sleep / Mood';
+
+      document.getElementById('coachBadgeTop').textContent = isAr ? 'المرشد الطبي لغير الأطباء (Non-MD Coach)' : 'Non-Physician Clinical Coach';
+      document.getElementById('coachStep1Label').textContent = isAr ? '1. كيف تجري هذا القياس بنفسك؟ (إرشادات مبسطة لغير الأطباء)' : '1. How to Take This Measurement (Non-MD Guide)';
+      document.getElementById('coachStep2Label').textContent = isAr ? '2. لماذا يُعد الفحص ضرورياً؟ وعلاقته بمخاطر الفضاء الخمسة' : '2. Why Exam Is Needed & Spaceflight Hazard Link';
+      document.getElementById('coachStep3Label').textContent = isAr ? '3. ما الإجراء الفوري عند الخروج عن المعدل؟ ومتى نُبلغ طبيب الرحلة؟' : '3. Immediate Action & Flight Surgeon Threshold';
+      document.getElementById('openEmergencyFromCoachBtn').textContent = isAr ? 'فتح بروتوكول طوارئ "سقوط زميل المهمة"' : 'Launch Step-by-Step Emergency Triage';
+      document.getElementById('logInspectionBtn').textContent = isAr ? 'تأكيد إتمام فحص العضو (+25 XP)' : 'Mark Organ Check Complete (+25 XP)';
+
+      document.getElementById('chart1Heading').textContent = isAr ? 'المخطط الزمني للمؤشرات الحيوية' : 'Dynamic Longitudinal Telemetry';
+      document.getElementById('chart2Heading').textContent = isAr ? 'تحليل مخاطر الطيران الفضائي الخمسة (NASA HRP)' : 'NASA HRP 5-Hazard Exposure & Organ Risk';
+
+      document.getElementById('emBadgeTop').textContent = isAr ? 'العمليات الطبية المستقلة عن الأرض (NASA Ames ExMC CDSS)' : 'Earth-Independent Medical Operations (NASA Ames ExMC CDSS)';
+      document.getElementById('transmitPacketBtn').textContent = isAr ? 'إنشاء وإرسال حزمة بيانات طبيب الرحلة (Store-and-Forward)' : 'Generate Store-and-Forward Flight Surgeon Packet';
+      document.getElementById('emStepsHeading').textContent = isAr ? 'تسلسل التدخل الإسعافي لغير الأطباء (اضغط على كل خطوة عند إتمامها)' : 'Interactive Non-Physician Triage Sequence (Click Each Step as Completed)';
+      document.getElementById('pkHeading').textContent = isAr ? 'حاسبة تعديل الجرعات الدوائية الفضائية (Spaceflight PK/PD)' : 'Spaceflight PK/PD Countermeasure Calculator';
+      document.getElementById('lblPkMass').textContent = isAr ? 'وزن رائد الفضاء (كجم)' : 'Astronaut Mass (kg)';
+      document.getElementById('lblPkDays').textContent = isAr ? 'الأيام المنقضية من المهمة' : 'Mission Elapsed Days';
+      document.getElementById('packetHeading').textContent = isAr ? 'حزمة البيانات المضغوطة لطبيب الرحلة على الأرض (JSON)' : 'Compressed Store-and-Forward Telemetry JSON';
+      document.getElementById('copyPacketBtn').textContent = isAr ? 'نسخ JSON' : 'Copy JSON';
+    }
+
+    function renderHeaderAndScenarioBar() {
+      const sc = SCENARIOS[state.activeScenario];
+      const loc = sc[state.lang];
+      const isAr = state.lang === 'ar';
+
+      document.getElementById('headerEnvBadge').textContent = loc.environment;
+      document.getElementById('headerLatencyBadge').textContent = loc.latency;
+      document.getElementById('activeScenarioTagSmall').textContent = loc.badge;
+
+      document.querySelectorAll('.scenario-btn').forEach(btn => {
+        const isCurrent = btn.getAttribute('data-scenario') === state.activeScenario;
+        const alignCls = isAr ? 'text-right' : 'text-left';
+        btn.className = isCurrent
+          ? `scenario-btn ${alignCls} p-3.5 rounded-xl border transition-all bg-dmNavyCard border-dmCyan shadow-lg ring-1 ring-dmCyan/50`
+          : `scenario-btn ${alignCls} p-3.5 rounded-xl border transition-all bg-dmNavyDeep/60 border-dmCyan/20 hover:border-dmCyan/60`;
+      });
+
+      const keys = ['hr', 'sysBP', 'glucose', 'spo2', 'temp', 'co2', 'iop', 'sleep'];
+      const levels = keys.map(k => evaluateMetricStatus(k, state.metrics[k]).level);
+      const pill = document.getElementById('overallStatusPill');
+      const dot = document.getElementById('overallStatusDot');
+      const txt = document.getElementById('overallStatusText');
+
+      if (levels.includes('CRITICAL')) {
+        pill.className = 'px-3.5 py-1.5 rounded-lg font-mono text-xs font-bold uppercase tracking-wider border flex items-center gap-2 bg-red-500/20 text-red-300 border-red-500/50';
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-red-400 animate-ping';
+        txt.textContent = isAr ? 'إنذار حرج — تدخل فوري مطلوب' : 'CRITICAL ALERT — ACTION REQUIRED';
+      } else if (levels.includes('CAUTION')) {
+        pill.className = 'px-3.5 py-1.5 rounded-lg font-mono text-xs font-bold uppercase tracking-wider border flex items-center gap-2 bg-amber-500/20 text-amber-300 border-amber-500/50';
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400';
+        txt.textContent = isAr ? 'تنبيه وقائي — يلزم إجراء مضاد' : 'CAUTION — COUNTERMEASURE ADVISED';
+      } else {
+        pill.className = 'px-3.5 py-1.5 rounded-lg font-mono text-xs font-bold uppercase tracking-wider border flex items-center gap-2 bg-emerald-500/20 text-emerald-300 border-emerald-500/50';
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400';
+        txt.textContent = isAr ? 'حالة مستقرة — جميع الأنظمة طبيعية' : 'NOMINAL — ALL SYSTEMS STABLE';
+      }
+    }
+
+    function renderKPICards() {
+      const m = state.metrics;
+      const isAr = state.lang === 'ar';
+      const cards = [
+        { key: 'hr', title: isAr ? 'نبض القلب' : 'Heart Rate', val: `${m.hr} bpm`, organ: 'cardio' },
+        { key: 'sysBP', title: isAr ? 'ضغط الدم' : 'Blood Pressure', val: `${m.sysBP}/${m.diaBP} mmHg`, organ: 'cardio' },
+        { key: 'glucose', title: isAr ? 'سكر الدم' : 'Blood Sugar', val: `${m.glucose} mg/dL`, organ: 'metabolic' },
+        { key: 'spo2', title: isAr ? 'تشبع الأكسجين' : 'Blood O2 (SpO2)', val: `${m.spo2}%`, organ: 'pulmonary' },
+        { key: 'temp', title: isAr ? 'حرارة الجسم' : 'Body Temp', val: `${m.temp.toFixed(1)} °C`, organ: 'metabolic' },
+        { key: 'co2', title: isAr ? 'غاز ppCO2' : 'Cabin ppCO2', val: `${m.co2.toFixed(1)} mmHg`, organ: 'pulmonary' },
+        { key: 'iop', title: isAr ? 'ضغط العين IOP' : 'Ocular IOP', val: `${m.iop} mmHg`, organ: 'neuro' },
+        { key: 'sleep', title: isAr ? 'النوم والمزاج' : 'Sleep & Mood', val: `${m.sleep.toFixed(1)}h • ${m.mood}/10`, organ: 'behavioral' }
+      ];
+
+      const colorMap = {
+        red: 'border-red-500/50 bg-red-500/10 text-red-300',
+        amber: 'border-amber-500/50 bg-amber-500/10 text-amber-300',
+        emerald: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+      };
+
+      const alignCls = isAr ? 'text-right' : 'text-left';
+      const container = document.getElementById('kpiGrid');
+      container.innerHTML = cards.map(c => {
+        const st = evaluateMetricStatus(c.key, m[c.key]);
+        const badgeCls = colorMap[st.color];
+        const isSelected = state.activeOrgan === c.organ;
+        const badgeTxt = isAr ? st.arLevel : st.level;
+        return `
+          <button type="button" data-kpi-organ="${c.organ}" class="kpi-card-btn ${alignCls} p-2.5 rounded-xl glass-card transition hover:border-dmCyan ${isSelected ? 'ring-1 ring-dmCyan border-dmCyan' : ''}">
+            <div class="flex items-center justify-between gap-1 mb-1">
+              <span class="text-[11px] font-bold text-dmSlate truncate">${c.title}</span>
+              <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${badgeCls}">${badgeTxt}</span>
+            </div>
+            <div class="text-sm font-extrabold font-mono text-dmIce truncate ltr-num">${c.val}</div>
+            <div class="text-[10px] text-dmSlate truncate mt-0.5">${st.label}</div>
+          </button>
+        `;
+      }).join('');
+
+      container.querySelectorAll('.kpi-card-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.activeOrgan = btn.getAttribute('data-kpi-organ');
+          renderAll();
+        });
+      });
+    }
+
+    function renderBodyMapAndCoach() {
+      const isAr = state.lang === 'ar';
+      const organs = ['neuro', 'behavioral', 'pulmonary', 'cardio', 'metabolic', 'musculoskeletal'];
+      const dotColorHex = {
+        CRITICAL: '#EF4444',
+        CAUTION: '#F59E0B',
+        NOMINAL: '#10B981'
+      };
+
+      organs.forEach(org => {
+        const node = document.getElementById(`organ-${org}`);
+        const dot = document.getElementById(`dot-${org}`);
+        const st = getOrganStatus(org);
+        if (dot) {
+          dot.setAttribute('fill', dotColorHex[st]);
+          if (st === 'CRITICAL') {
+            dot.classList.add('pulse-indicator');
+          } else {
+            dot.classList.remove('pulse-indicator');
+          }
+        }
+        if (node) {
+          if (state.activeOrgan === org) {
+            node.classList.add('organ-selected');
+          } else {
+            node.classList.remove('organ-selected');
+          }
+        }
+      });
+
+      document.querySelectorAll('.organ-pill').forEach(btn => {
+        const isAct = btn.getAttribute('data-organ-btn') === state.activeOrgan;
+        btn.className = isAct
+          ? 'organ-pill px-2 py-1.5 rounded-lg text-[11px] font-bold border border-dmCyan bg-dmCyan text-dmNavy truncate'
+          : 'organ-pill px-2 py-1.5 rounded-lg text-[11px] font-bold border border-dmCyan/25 bg-dmNavyDeep text-dmSlate hover:text-dmIce truncate';
+      });
+
+      const info = ORGAN_KNOWLEDGE[state.activeOrgan][state.lang];
+      const orgStatus = getOrganStatus(state.activeOrgan);
+      document.getElementById('activeOrganLabel').textContent = info.title;
+      document.getElementById('coachOrganTitle').textContent = info.title;
+      document.getElementById('coachOrganSummary').textContent = info.summary;
+      document.getElementById('coachHardwareTag').textContent = info.hardware;
+      document.getElementById('coachHazardTag').textContent = info.hazard;
+      document.getElementById('coachStandardTag').textContent = info.standard;
+      document.getElementById('coachHowToMeasure').textContent = info.howToMeasure;
+      document.getElementById('coachWhyItMatters').textContent = info.whyItMatters;
+      document.getElementById('coachWhatToDo').textContent = info.whatToDo;
+
+      const sevBadge = document.getElementById('coachSeverityBadge');
+      if (orgStatus === 'CRITICAL') {
+        sevBadge.className = 'text-xs font-mono font-bold px-2.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/40';
+        sevBadge.textContent = isAr ? 'حرج — تدخل فوري' : 'CRITICAL — ACT IMMEDIATELY';
+      } else if (orgStatus === 'CAUTION') {
+        sevBadge.className = 'text-xs font-mono font-bold px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40';
+        sevBadge.textContent = isAr ? 'تنبيه — راقب وعدّل' : 'CAUTION — MONITOR & ADJUST';
+      } else {
+        sevBadge.className = 'text-xs font-mono font-bold px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+        sevBadge.textContent = isAr ? 'طبيعي — متابعة روتينية' : 'NOMINAL — ROUTINE TRACKING';
+      }
+
+      const scLoc = SCENARIOS[state.activeScenario][state.lang];
+      document.getElementById('coachFlightSurgeonTrigger').textContent = isAr
+        ? `تصعيد طبيب الرحلة (${scLoc.latency}): إرسال حزمة تخطيط Bio-Monitor وتحاليل Bio-Analyzer تلقائياً عند وصول ${info.title} إلى مستوى (${orgStatus}).`
+        : `Flight Surgeon Escalation (${scLoc.latency}): Auto-package Bio-Monitor waveform + Bio-Analyzer biomarker JSON when ${info.title} crosses ${orgStatus} threshold.`;
+    }
+
+    function renderCharts() {
+      const m = state.metrics;
+      const sc = SCENARIOS[state.activeScenario];
+      const isAr = state.lang === 'ar';
+      const mode = document.getElementById('chartMetricSelect').value;
+
+      const labels = isAr
+        ? ['L-92 (أرض)', 'L-44 (أرض)', 'L-3 (أرض)', 'FD1 (رحلة)', 'FD2 (رحلة)', 'FD3 (رحلة)', 'القراءة الآن', 'R+1 متوقع']
+        : ['L-92 (1G)', 'L-44 (1G)', 'L-3 (1G)', 'FD1 (Flight)', 'FD2 (Flight)', 'FD3 (Flight)', 'Active Now', 'R+1 Proj'];
+
+      let ds1 = {};
+      let ds2 = {};
+
+      if (mode === 'cardio') {
+        ds1 = {
+          label: isAr ? 'نبض القلب (bpm)' : 'Heart Rate (bpm)',
+          data: [66, 68, 70, 74, 78, 82, m.hr, Math.round(m.hr * 0.85)],
+          borderColor: '#12B8F2',
+          backgroundColor: 'rgba(18, 184, 242, 0.15)',
+          tension: 0.35,
+          fill: true
+        };
+        ds2 = {
+          label: isAr ? 'ضغط الدم الانقباضي (mmHg)' : 'Systolic BP (mmHg)',
+          data: [118, 116, 120, 124, 122, 119, m.sysBP, 115],
+          borderColor: '#7C3AED',
+          backgroundColor: 'rgba(124, 58, 237, 0.1)',
+          tension: 0.35,
+          fill: false
+        };
+      } else if (mode === 'osdr_cytokines') {
+        ds1 = {
+          label: isAr ? 'جلوكوز الدم OSD-575 (mg/dL)' : 'OSD-575 Blood Glucose (mg/dL)',
+          data: [88, 91, 90, 102, 108, 112, m.glucose, 96],
+          borderColor: '#10B981',
+          backgroundColor: 'rgba(16, 185, 129, 0.15)',
+          tension: 0.35,
+          fill: true
+        };
+        ds2 = {
+          label: isAr ? 'مؤشر السيتوكين الالتهابي IL-6 (x10)' : 'OSD-575 IL-6 / Stress Index (pg/mL x10)',
+          data: [18, 19, 22, 45, 58, 64, Math.round(m.hr * 0.65), 32],
+          borderColor: '#F59E0B',
+          backgroundColor: 'rgba(245, 158, 11, 0.1)',
+          tension: 0.35,
+          fill: false
+        };
+      } else if (mode === 'sans_co2') {
+        ds1 = {
+          label: isAr ? 'ثاني أكسيد الكربون ppCO2 (حد ≤3.0)' : 'Cabin ppCO2 (mmHg) [Limit ≤3.0]',
+          data: [0.6, 0.6, 0.7, 2.1, 2.5, 2.8, m.co2, 2.0],
+          borderColor: '#F59E0B',
+          backgroundColor: 'rgba(245, 158, 11, 0.15)',
+          tension: 0.35,
+          fill: true
+        };
+        ds2 = {
+          label: isAr ? 'ضغط العين الداخلي IOP (mmHg)' : 'Intraocular Pressure IOP (mmHg)',
+          data: [14, 14, 15, 18, 19, 20, m.iop, 16],
+          borderColor: '#12B8F2',
+          backgroundColor: 'rgba(18, 184, 242, 0.1)',
+          tension: 0.35,
+          fill: false
+        };
+      } else {
+        ds1 = {
+          label: isAr ? 'جرعة إشعاع RadLab (mSv/day x10)' : 'RadLab Dose Rate (mSv/day x10)',
+          data: [0.1, 0.1, 0.1, 4.2, 4.8, 5.1, +(m.radiation * 10).toFixed(1), 4.0],
+          borderColor: '#EF4444',
+          backgroundColor: 'rgba(239, 68, 68, 0.15)',
+          tension: 0.35,
+          fill: true
+        };
+        ds2 = {
+          label: isAr ? 'كرات الدم البيضاء OSD-569 (x10^3/uL)' : 'OSD-569 WBC Count (x10^3 / uL)',
+          data: [6.2, 6.0, 6.4, 7.8, 8.4, 8.9, +(6.5 + m.radiation * 1.6).toFixed(1), 6.8],
+          borderColor: '#12B8F2',
+          backgroundColor: 'rgba(18, 184, 242, 0.1)',
+          tension: 0.35,
+          fill: false
+        };
+      }
+
+      const ctx1 = document.getElementById('longitudinalChart').getContext('2d');
+      if (longitudinalChartInstance) {
+        longitudinalChartInstance.data.labels = labels;
+        longitudinalChartInstance.data.datasets = [ds1, ds2];
+        longitudinalChartInstance.update();
+      } else {
+        longitudinalChartInstance = new Chart(ctx1, {
+          type: 'line',
+          data: { labels, datasets: [ds1, ds2] },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { labels: { color: '#AFC3DE', font: { size: 10, family: 'IBM Plex Sans Arabic' } } }
+            },
+            scales: {
+              x: { ticks: { color: '#AFC3DE', font: { size: 9, family: 'IBM Plex Sans Arabic' } }, grid: { color: 'rgba(175,195,222,0.08)' } },
+              y: { ticks: { color: '#AFC3DE', font: { size: 9 } }, grid: { color: 'rgba(175,195,222,0.08)' } }
+            }
+          }
+        });
+      }
+
+      const ctx2 = document.getElementById('hazardRadarChart').getContext('2d');
+      const radarLabels = isAr
+        ? ['الإشعاع الفضائي', 'العزلة والنوم', 'البعد عن الأرض', 'تغير الجاذبية', 'البيئة المغلقة (CO2/غبار)']
+        : ['Space Radiation', 'Isolation/Sleep', 'Earth Distance', 'Gravity Shift', 'Closed Env (CO2/Dust)'];
+      const dynamicRadar = [
+        Math.min(100, Math.round(sc.hazardRadar[0] * (m.radiation / sc.metrics.radiation))),
+        Math.min(100, Math.round(100 - m.sleep * 8)),
+        sc.hazardRadar[2],
+        Math.min(100, Math.round(m.iop * 3.8)),
+        Math.min(100, Math.round(m.co2 * 22))
+      ];
+
+      if (hazardRadarChartInstance) {
+        hazardRadarChartInstance.data.labels = radarLabels;
+        hazardRadarChartInstance.data.datasets[0].data = dynamicRadar;
+        hazardRadarChartInstance.update();
+      } else {
+        hazardRadarChartInstance = new Chart(ctx2, {
+          type: 'radar',
+          data: {
+            labels: radarLabels,
+            datasets: [{
+              label: isAr ? 'مؤشر التعرض للمخاطر (0-100)' : 'Hazard Exposure Index (0-100)',
+              data: dynamicRadar,
+              backgroundColor: 'rgba(18, 184, 242, 0.22)',
+              borderColor: '#12B8F2',
+              pointBackgroundColor: '#7C3AED',
+              borderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              r: {
+                min: 0,
+                max: 100,
+                angleLines: { color: 'rgba(175,195,222,0.15)' },
+                grid: { color: 'rgba(175,195,222,0.15)' },
+                pointLabels: { color: '#F7FBFF', font: { size: 9.5, family: 'IBM Plex Sans Arabic' } },
+                ticks: { display: false }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function renderEmergencyView() {
+      const scLoc = SCENARIOS[state.activeScenario][state.lang];
+      const isAr = state.lang === 'ar';
+      document.getElementById('emergencyHeaderTitle').textContent = scLoc.emergencyTitle;
+      document.getElementById('emergencyHeaderSub').textContent = scLoc.emergencySub;
+
+      const listEl = document.getElementById('emergencyStepsList');
+      listEl.innerHTML = state.emergencySteps.map(st => `
+        <div data-estep="${st.id}" class="estep-card cursor-pointer p-3.5 rounded-xl border transition flex items-start gap-3 ${st.done ? 'bg-emerald-500/15 border-emerald-400/50' : 'bg-dmNavyDeep/90 border-dmCyan/25 hover:border-dmCyan'}">
+          <input type="checkbox" ${st.done ? 'checked' : ''} class="mt-1 h-4 w-4 rounded accent-dmCyan pointer-events-none" />
+          <div class="flex-1">
+            <div class="text-xs font-bold text-dmIce">${st.title}</div>
+            <p class="text-xs text-dmSlate mt-1 leading-relaxed">${st.detail}</p>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded shrink-0 ${st.done ? 'bg-emerald-500/25 text-emerald-300' : 'bg-dmNavyCard text-dmCyan'}">
+            ${st.done ? (isAr ? 'مكتمل' : 'VERIFIED') : (isAr ? 'قيد التنفيذ' : 'PENDING')}
+          </span>
+        </div>
+      `).join('');
+
+      listEl.querySelectorAll('.estep-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const id = card.getAttribute('data-estep');
+          const target = state.emergencySteps.find(x => x.id === id);
+          if (target) {
+            target.done = !target.done;
+            if (target.done) {
+              state.xp += 30;
+              showToast(isAr ? `تم إتمام خطوة الطوارئ (+30 XP)` : `Completed triage step (+30 XP)`);
+            }
+            renderEmergencyView();
+            renderRoutineChecklist();
+          }
+        });
+      });
+
+      updatePKPDCalculator();
+      updateTelemetryPacketPreview();
+    }
+
+    function updatePKPDCalculator() {
+      const sc = SCENARIOS[state.activeScenario];
+      const scLoc = sc[state.lang];
+      const isAr = state.lang === 'ar';
+      const mass = Math.max(40, parseFloat(document.getElementById('pkMassInput').value) || 76);
+      const days = Math.max(1, parseFloat(document.getElementById('pkMissionDaysInput').value) || 142);
+
+      const earthDoseMg = +(mass * sc.baseDoseMgPerKg).toFixed(1);
+      const radDegradationPct = Math.min(18, +(days * 0.035).toFixed(1));
+      const spaceDoseMg = +(earthDoseMg * sc.pkAdjustmentFactor * (1 + radDegradationPct / 100)).toFixed(1);
+
+      document.getElementById('pkOutputBox').innerHTML = `
+        <div class="font-bold text-dmCyan">${scLoc.drugName}</div>
+        <div class="grid grid-cols-2 gap-2 pt-1 font-mono">
+          <div class="p-2 rounded bg-dmNavyDeep">
+            <span class="block text-[10px] text-dmSlate">${isAr ? 'الجرعة الأرضية المعتادة (1G)' : '1G Earth Baseline Dose'}</span>
+            <span class="text-sm font-bold text-dmIce ltr-num">${earthDoseMg} mg</span>
+          </div>
+          <div class="p-2 rounded bg-dmNavyDeep border border-dmCyan/40">
+            <span class="block text-[10px] text-dmCyan">${isAr ? 'الجرعة الفضائية المعايرة PK/PD' : 'Space PK/PD Calibrated'}</span>
+            <span class="text-sm font-bold text-emerald-300 ltr-num">${spaceDoseMg} mg</span>
+          </div>
+        </div>
+        <div class="text-[11px] text-dmSlate pt-1 leading-relaxed">
+          <strong class="text-dmIce">${isAr ? `تراجع الفاعلية الإشعاعي (${days} يوم):` : `Shelf-Life Potency Drift (${days}d):`}</strong> -${radDegradationPct}% • ${scLoc.drugRationale}
+        </div>
+      `;
+    }
+
+    function updateTelemetryPacketPreview() {
+      const scLoc = SCENARIOS[state.activeScenario][state.lang];
+      const packet = {
+        protocol: 'AURA-EIMO-STORE-AND-FORWARD-v2.6',
+        timestampUTC: new Date().toISOString(),
+        crewMember: state.crewId,
+        environmentRegime: scLoc.environment,
+        oneWayRadioDelay: scLoc.latency,
+        vitals: state.metrics,
+        triageStepsCompleted: state.emergencySteps.filter(s => s.done).length + '/' + state.emergencySteps.length,
+        referenceStandards: ['NASA-STD-3001-V1-RevC', 'OCHMO-TB-004', 'OCHMO-MTB-001', 'OSDR-OSD-575']
+      };
+      document.getElementById('telemetryPacketPre').textContent = JSON.stringify(packet, null, 2);
+    }
+
+    function renderSlidersAndRoutine() {
+      const m = state.metrics;
+      document.getElementById('inputHR').value = m.hr;
+      document.getElementById('valHR').textContent = `${m.hr} bpm`;
+
+      document.getElementById('inputSysBP').value = m.sysBP;
+      document.getElementById('valSysBP').textContent = `${m.sysBP} mmHg`;
+
+      document.getElementById('inputGlucose').value = m.glucose;
+      document.getElementById('valGlucose').textContent = `${m.glucose} mg/dL`;
+
+      document.getElementById('inputSpO2').value = m.spo2;
+      document.getElementById('valSpO2').textContent = `${m.spo2}%`;
+
+      document.getElementById('inputTemp').value = m.temp;
+      document.getElementById('valTemp').textContent = `${m.temp.toFixed(1)} °C`;
+
+      document.getElementById('inputCO2').value = m.co2;
+      document.getElementById('valCO2').textContent = `${m.co2.toFixed(1)} mmHg`;
+
+      document.getElementById('inputIOP').value = m.iop;
+      document.getElementById('valIOP').textContent = `${m.iop} mmHg`;
+
+      document.getElementById('inputSleep').value = m.sleep;
+      document.getElementById('valSleep').textContent = `${m.sleep.toFixed(1)} hrs`;
+
+      renderRoutineChecklist();
+      renderSymptomLogs();
+    }
+
+    function renderRoutineChecklist() {
+      const isAr = state.lang === 'ar';
+      const level = Math.floor(state.xp / 100) + 1;
+      const pct = Math.min(100, state.xp % 100);
+      document.getElementById('xpCounterText').textContent = isAr
+        ? `${state.xp} XP • المستوى ${level}`
+        : `${state.xp} XP • Level ${level}`;
+      document.getElementById('xpProgressBar').style.width = `${pct}%`;
+
+      const container = document.getElementById('routineChecklistContainer');
+      container.innerHTML = state.routineTasks.map(item => {
+        const title = isAr ? item.arTitle : item.enTitle;
+        return `
+          <div data-rt="${item.id}" class="rt-item cursor-pointer p-3 rounded-xl border transition flex items-center justify-between gap-3 ${item.done ? 'bg-emerald-500/15 border-emerald-500/40' : 'bg-dmNavyDeep/85 border-dmCyan/20 hover:border-dmCyan/60'}">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" ${item.done ? 'checked' : ''} class="h-4 w-4 rounded accent-dmCyan pointer-events-none" />
+              <div>
+                <div class="text-xs font-bold ${item.done ? 'line-through text-dmSlate' : 'text-dmIce'}">${title}</div>
+                <div class="text-[10px] font-mono text-dmSlate">${item.time} • ${item.env}</div>
+              </div>
+            </div>
+            <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-dmCyan/15 text-dmCyan shrink-0 ltr-num">+${item.xp} XP</span>
+          </div>
+        `;
+      }).join('');
+
+      container.querySelectorAll('.rt-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const id = el.getAttribute('data-rt');
+          const task = state.routineTasks.find(t => t.id === id);
+          if (task) {
+            task.done = !task.done;
+            state.xp += task.done ? task.xp : -task.xp;
+            showToast(task.done
+              ? (isAr ? `تم إنجاز المهمة الروتينية: +${task.xp} XP!` : `Routine completed: +${task.xp} XP!`)
+              : (isAr ? `تم إلغاء تحديد المهمة.` : `Routine unmarked.`));
+            renderRoutineChecklist();
+          }
+        });
+      });
+    }
+
+    function renderSymptomLogs() {
+      const logBox = document.getElementById('symptomLogHistory');
+      logBox.innerHTML = state.symptomLogs.map(entry => `
+        <div class="p-2 rounded bg-dmNavyDeep border border-dmCyan/15">${entry}</div>
+      `).join('');
+    }
+
+    function switchView(viewName) {
+      state.activeView = viewName;
+      ['dashboard', 'emergency', 'routine', 'resources'].forEach(v => {
+        const sec = document.getElementById(`view-${v}`);
+        if (v === viewName) {
+          sec.classList.remove('hidden');
+        } else {
+          sec.classList.add('hidden');
+        }
+      });
+
+      document.querySelectorAll('.view-tab').forEach(btn => {
+        const isCurrent = btn.getAttribute('data-view') === viewName;
+        btn.className = isCurrent
+          ? 'view-tab px-3.5 py-2 rounded-xl text-xs font-bold transition bg-dmCyan text-dmNavy shadow-md'
+          : 'view-tab px-3.5 py-2 rounded-xl text-xs font-bold transition bg-dmNavyCard text-dmSlate hover:text-dmIce border border-dmCyan/20';
+      });
+
+      if (viewName === 'dashboard') {
+        renderCharts();
+      }
+    }
+
+    function loadScenario(scenarioKey) {
+      const sc = SCENARIOS[scenarioKey];
+      if (!sc) return;
+      state.activeScenario = scenarioKey;
+      state.activeOrgan = sc.defaultOrgan;
+      state.metrics = { ...sc.metrics };
+      state.emergencySteps = JSON.parse(JSON.stringify(sc[state.lang].steps));
+      renderAll();
+      const scLoc = sc[state.lang];
+      showToast(state.lang === 'ar' ? `تم التبديل إلى ${scLoc.badge}` : `Switched to ${scLoc.badge}`);
+    }
+
+    function renderAll() {
+      applyLanguageStaticStrings();
+      renderHeaderAndScenarioBar();
+      renderKPICards();
+      renderBodyMapAndCoach();
+      renderCharts();
+      renderEmergencyView();
+      renderSlidersAndRoutine();
+    }
+
+    // =========================================================================
+    // EVENT LISTENERS INITIALIZATION
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.scenario-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          loadScenario(btn.getAttribute('data-scenario'));
+        });
+      });
+
+      document.getElementById('resetScenarioBtn').addEventListener('click', () => {
+        loadScenario(state.activeScenario);
+      });
+
+      // Language Toggle Button (AR <-> EN)
+      document.getElementById('langToggleBtn').addEventListener('click', () => {
+        state.lang = state.lang === 'ar' ? 'en' : 'ar';
+        const sc = SCENARIOS[state.activeScenario];
+        state.emergencySteps = JSON.parse(JSON.stringify(sc[state.lang].steps));
+        renderAll();
+        showToast(state.lang === 'ar' ? 'تم التبديل إلى الواجهة العربية (RTL)' : 'Switched to English Interface (LTR)');
+      });
+
+      document.getElementById('crewSelect').addEventListener('change', (e) => {
+        state.crewId = e.target.value;
+        updateTelemetryPacketPreview();
+        showToast(state.lang === 'ar' ? `تم اختيار رائد الفضاء ${state.crewId}` : `Switched crew profile to ${state.crewId}`);
+      });
+
+      document.querySelectorAll('.view-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          switchView(btn.getAttribute('data-view'));
+        });
+      });
+
+      document.querySelectorAll('.organ-node').forEach(node => {
+        node.addEventListener('click', () => {
+          state.activeOrgan = node.getAttribute('data-organ');
+          renderAll();
+        });
+      });
+
+      document.querySelectorAll('.organ-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.activeOrgan = btn.getAttribute('data-organ-btn');
+          renderAll();
+        });
+      });
+
+      document.getElementById('chartMetricSelect').addEventListener('change', () => {
+        renderCharts();
+      });
+
+      document.getElementById('openEmergencyFromCoachBtn').addEventListener('click', () => {
+        switchView('emergency');
+      });
+
+      document.getElementById('logInspectionBtn').addEventListener('click', () => {
+        state.xp += 25;
+        const info = ORGAN_KNOWLEDGE[state.activeOrgan][state.lang];
+        const msg = state.lang === 'ar'
+          ? `[${new Date().toISOString().slice(11, 16)} UTC] تم تسجيل فحص ذاتي لـ ${info.title} (+25 XP).`
+          : `[${new Date().toISOString().slice(11, 16)} UTC] Logged non-MD assessment for ${info.title} (+25 XP).`;
+        state.symptomLogs.unshift(msg);
+        renderRoutineChecklist();
+        renderSymptomLogs();
+        showToast(msg);
+      });
+
+      document.getElementById('voiceCoachBtn').addEventListener('click', () => {
+        const isAr = state.lang === 'ar';
+        if (!('speechSynthesis' in window)) {
+          showToast(isAr ? 'تم تفعيل وضع القراءة المرئية للإرشادات.' : 'Voice synthesis initialized in visual readout mode.');
+          return;
+        }
+        if (window.speechSynthesis.speaking) {
+          window.speechSynthesis.cancel();
+          document.getElementById('voiceCoachLabel').textContent = isAr ? 'قراءة الإرشادات صوتياً' : 'Read Guidance Aloud';
+          return;
+        }
+        const info = ORGAN_KNOWLEDGE[state.activeOrgan][state.lang];
+        const utter = new SpeechSynthesisUtterance(
+          `${info.title}. ${info.howToMeasure} ${info.whatToDo}`
+        );
+        utter.lang = isAr ? 'ar-EG' : 'en-US';
+        utter.onend = () => {
+          document.getElementById('voiceCoachLabel').textContent = isAr ? 'قراءة الإرشادات صوتياً' : 'Read Guidance Aloud';
+        };
+        document.getElementById('voiceCoachLabel').textContent = isAr ? 'إيقاف القراءة الصوتية' : 'Stop Voice Coach';
+        window.speechSynthesis.speak(utter);
+      });
+
+      document.getElementById('pkMassInput').addEventListener('input', updatePKPDCalculator);
+      document.getElementById('pkMissionDaysInput').addEventListener('input', updatePKPDCalculator);
+
+      document.getElementById('transmitPacketBtn').addEventListener('click', () => {
+        const scLoc = SCENARIOS[state.activeScenario][state.lang];
+        state.xp += 40;
+        const msg = state.lang === 'ar'
+          ? `[${new Date().toISOString().slice(11, 16)} UTC] تم إرسال حزمة بيانات الطوارئ لطبيب الرحلة (${scLoc.latency}).`
+          : `[${new Date().toISOString().slice(11, 16)} UTC] Queued Store-and-Forward Flight Surgeon packet (${scLoc.latency}).`;
+        state.symptomLogs.unshift(msg);
+        renderRoutineChecklist();
+        renderSymptomLogs();
+        showToast(msg);
+      });
+
+      document.getElementById('copyPacketBtn').addEventListener('click', () => {
+        const text = document.getElementById('telemetryPacketPre').textContent;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).catch(() => {});
+        }
+        showToast(state.lang === 'ar' ? 'تم نسخ حزمة JSON إلى الحافظة.' : 'Telemetry JSON copied to clipboard.');
+      });
+
+      const sliderBindings = [
+        { id: 'inputHR', key: 'hr', isFloat: false },
+        { id: 'inputSysBP', key: 'sysBP', isFloat: false },
+        { id: 'inputGlucose', key: 'glucose', isFloat: false },
+        { id: 'inputSpO2', key: 'spo2', isFloat: false },
+        { id: 'inputTemp', key: 'temp', isFloat: true },
+        { id: 'inputCO2', key: 'co2', isFloat: true },
+        { id: 'inputIOP', key: 'iop', isFloat: false },
+        { id: 'inputSleep', key: 'sleep', isFloat: true }
+      ];
+
+      sliderBindings.forEach(b => {
+        document.getElementById(b.id).addEventListener('input', (e) => {
+          const v = b.isFloat ? parseFloat(e.target.value) : parseInt(e.target.value, 10);
+          state.metrics[b.key] = v;
+          if (b.key === 'sysBP') {
+            state.metrics.diaBP = Math.round(v * 0.64);
+          }
+          renderAll();
+        });
+      });
+
+      document.querySelectorAll('.scan-sim-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const type = btn.getAttribute('data-scan');
+          const isAr = state.lang === 'ar';
+          const banner = document.getElementById('scanResultBanner');
+          banner.classList.remove('hidden');
+          if (type === 'ultrasound') {
+            banner.textContent = isAr
+              ? '[نتيجة سونار الصدر POCUS]: انزلاق غشاء الجنب طبيعي بالجانبين؛ رصد إجهاد طفيف بالبطين الأيمن مع انقباض بطيني أيسر سريع. تم الإرفاق بحزمة طبيب الرحلة.'
+              : '[POCUS Thoracic Ultrasound]: Pleural sliding confirmed bilaterally; mild right-ventricular strain detected. Auto-attached to Flight Surgeon packet.';
+          } else if (type === 'oct') {
+            banner.textContent = isAr
+              ? `[تصوير الشبكية OCT ومقياس ضغط العين]: زيادة سمك الشبكية المحيط بالعصب البصري +38 ميكرون مقارنة بـ L-92؛ ضغط العين ${state.metrics.iop} mmHg (مؤشر SANS درجة 1 وفق OCHMO-MTB-001).`
+              : `[Retinal OCT & Tonometry]: Peripapillary Total Retinal Thickness +38 um vs L-92 baseline; IOP ${state.metrics.iop} mmHg (OCHMO-MTB-001 SANS Grade 1).`;
+          } else {
+            banner.textContent = isAr
+              ? `[تحليل قطرة الدم في CSA Bio-Analyzer]: جلوكوز الدم ${state.metrics.glucose} mg/dL، إنزيم القلب hs-Troponin I ضمن الحدود، وارتفاع طفيف في السيتوكين IL-6 (مرجع دراسة OSDR OSD-575).`
+              : `[CSA Bio-Analyzer Microfluidic Assay]: Capillary glucose ${state.metrics.glucose} mg/dL, hs-Troponin I normal, IL-6 mildly elevated (OSDR OSD-575 reference).`;
+          }
+          state.xp += 20;
+          renderRoutineChecklist();
+          showToast(isAr ? 'تم إجراء الفحص التصويري وإضافته للسجل الطبي (+20 XP).' : 'Diagnostic scan processed (+20 XP).');
+        });
+      });
+
+      document.getElementById('addSymptomLogBtn').addEventListener('click', () => {
+        const inp = document.getElementById('crewSymptomInput');
+        const val = inp.value.trim();
+        const isAr = state.lang === 'ar';
+        if (!val) {
+          showToast(isAr ? 'أدخل العرض أو الملاحظة أولاً.' : 'Enter a symptom or note before logging.');
+          return;
+        }
+        state.symptomLogs.unshift(`[${new Date().toISOString().slice(11, 16)} UTC] (${state.crewId}): ${val}`);
+        inp.value = '';
+        state.xp += 15;
+        renderRoutineChecklist();
+        renderSymptomLogs();
+        showToast(isAr ? 'تم تسجيل ملاحظة رائد الفضاء (+15 XP).' : 'Crew symptom note logged (+15 XP).');
+      });
+
+      renderAll();
+    });
+  </script>
+</body>
+</html>
